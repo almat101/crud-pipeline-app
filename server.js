@@ -1,14 +1,42 @@
 import express from 'express'
 
+import morgan from 'morgan';
+
 const app = express()
 const port = 3000
 
-const myLogger = function (req, res, next) {
-  console.log('LOGGED');
-  next();
-};
+//                                                             ":method :url :status :response-time ms\ - :res[content-length]"
+// middleware logger utile per stampare info sulla richiesta es "GET /about 200 1.896 ms - 34" 
+app.use(morgan('dev'));
 
-app.use(myLogger);
+// funzione custom per stampare a schermo info utile ( custom logger tipo morgan) 
+//const myLogger = function (req, res, next) {
+  //console.log('--- MIDDLEWARE LOG TEST ---');
+  //console.log(`Richiesta in arrivo: ${req.method} ${req.originalUrl}`);
+  //console.log(`Timestamp: ${new Date().toISOString()}`); // Preferibile ISO string per standardizzazione
+  //console.log(`IP client: ${req.ip}`);
+  //console.log(`User-Agent: ${req.get('User-Agent') || 'N/A'}`); // User-Agent è un header di RICHIESTA, corretto
+//
+  //// Leggi il Content-Type dalla RICHIESTA
+  //// Sarà undefined per GET/DELETE, presente per POST/PUT/PATCH
+  //console.log(`Content-Type della Richiesta: ${req.get('Content-Type') || 'N/A (Nessun corpo o header)'}`);
+//
+  //// Leggi l'Host dalla RICHIESTA (è un header di richiesta!)
+  //console.log(`Host della Richiesta: ${req.get('Host') || 'N/A'}`);
+//
+  //// Puoi anche leggere req.hostname che è una proprietà più comoda
+  //console.log(`Hostname: ${req.hostname}`);
+//
+  //next();
+//};
+
+// usiamo il custom middleware myLogger 
+//app.use(myLogger);
+
+
+
+// middleware impostato a livello globale
+// serve per parsare il corpo(body) delle richieste in entrata quando sono in formato JSON
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -17,19 +45,27 @@ app.get('/', (req, res) => {
 
 app.get('/about',(req,res)=>
 {
-  res.json({message : "success", test : "lol"})
+  // richiesta GET qui res.json e' usato per Serializzare JSON per la Risposta (Output) (prende un oggeto javascript e lo serializza in un JSON)
+  // (il JSON e' hardcodato direttamente, in realta' andrebbe preso da un database)
+  res.json({message : "success", test : "lol"}) 
 })
 
 app.get('/plain',(req,res) =>
 {
-  res.set('Content-Type','plain/text')
-  res.send("Plain text sended!");
+  //  res.set modifca l'header e lo cambia in text/plain
+  res.set('Content-Type','text/plain');
+  res.send('Plain text sended!');
 })
 
 
 app.post('/data', (req,res) =>
 {
-  console.log("received data:", req.body)
+  // richiesta POST 
+  // dentro express.json() ce del codice che intercetta la richiesta HTTP che contiene anche il body come oggetto JSON, legge il corpo e lo parsa in oggetto javascript 
+  // e lo inserisce dentro req.body, dopo questo chiama next() per passare al prossimo middleware. req.body diventa un oggetto javascript grazie ad express.json().
+  // se non viene usato express.json() con app.use(express.json()); il body sara' undefined.
+  // Anche in questa POST il codice e' hardcoded, in realta' andrebbero effettuati controlli sul tipo di oggetto, se ha i campi necessari ecc e poi aggiunto al database.
+  console.log('Dati ricevuti nel corpo della richiesta:', req.body);
   res.status(201);
   res.json({
     message: "dati ricevuti",
