@@ -1,13 +1,16 @@
 import express from 'express'
-
 import morgan from 'morgan';
+import helmet from 'helmet';
 
-const app = express()
-const port = 3000
+const app = express();
+const port = 3000;
 
 //                                                             ":method :url :status :response-time ms\ - :res[content-length]"
 // middleware logger utile per stampare info sulla richiesta es "GET /about 200 1.896 ms - 34" 
 app.use(morgan('dev'));
+
+// middleware che aggiunge vari header di sicurezza alla risposta HTTP
+app.use(helmet())
 
 // funzione custom per stampare a schermo info utile ( custom logger tipo morgan) 
 //const myLogger = function (req, res, next) {
@@ -43,6 +46,26 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
+//Query string con /user/search va messo prima di /user/:id per evitare che express esequa prima user/:id
+app.get('/products/search', (req,res) =>
+{
+  console.log(req.query)
+  res.send(`req.query.name ${req.query.name} req.query.age ${req.query.age}`)
+})
+
+// Parametro nella richiesta (req.params)
+app.get('/products/:id', (req,res) => 
+{
+  let id = req.params.id;
+  let isDigit = /^[0-9]+$/.test(id);
+  let type = typeof req.params.id;
+  if (isDigit) {
+    res.send(`req.params is: ${req.params.id}, type is ${type}, is digit? ${isDigit}`)
+  } else {
+    res.status(400).send("Error ID is not a digit!")
+  }
+})
+
 app.get('/about',(req,res)=>
 {
   // richiesta GET qui res.json e' usato per Serializzare JSON per la Risposta (Output) (prende un oggeto javascript e lo serializza in un JSON)
@@ -54,10 +77,11 @@ app.get('/plain',(req,res) =>
 {
   //  res.set modifca l'header e lo cambia in text/plain
   res.set('Content-Type','text/plain');
+  // res.send invia semplice testo (se imoposta nell header) puo anche inviare oggetti JSON 
   res.send('Plain text sended!');
 })
 
-
+// test prima POST
 app.post('/data', (req,res) =>
 {
   // richiesta POST 
@@ -77,9 +101,11 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
   console.log(`
   Route available:
-  '/'       return a string,
-  '/about'  return a JSON object
-  '/plain'  return a string with Content-type set to plain/text
-  '/data'   send JSON data
+  '/'                 (GET) return a string
+  '/products/search'  (GET) return the query srting parameters searched
+  '/products/:id'     (GET) return the 'id'(accept only digit or return 400)
+  '/about'            (GET) return a JSON object
+  '/plain'            (GET) return a string with Content-type set to plain/text
+  '/data'             (POST) send JSON data
   `)
 })
