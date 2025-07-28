@@ -1,9 +1,15 @@
 import express from 'express'
 import morgan from 'morgan';
 import helmet from 'helmet';
+import dotenv from 'dotenv'
 
 const app = express();
 const port = 3000;
+
+//libreria di node per leggere i file .env ( su python si usa os.environ.get("ENV_VARIABLE"))
+dotenv.config({ path: '~/Desktop/express_project_1/.env' })
+console.log(process.env) // stampa tutto l'env compresi i valori che ho aggiunto al .env
+
 
 //                                                             ":method :url :status :response-time ms\ - :res[content-length]"
 // middleware logger utile per stampare info sulla richiesta es "GET /about 200 1.896 ms - 34" 
@@ -11,31 +17,6 @@ app.use(morgan('dev'));
 
 // middleware che aggiunge vari header di sicurezza alla risposta HTTP
 app.use(helmet())
-
-// funzione custom per stampare a schermo info utile ( custom logger tipo morgan) 
-//const myLogger = function (req, res, next) {
-  //console.log('--- MIDDLEWARE LOG TEST ---');
-  //console.log(`Richiesta in arrivo: ${req.method} ${req.originalUrl}`);
-  //console.log(`Timestamp: ${new Date().toISOString()}`); // Preferibile ISO string per standardizzazione
-  //console.log(`IP client: ${req.ip}`);
-  //console.log(`User-Agent: ${req.get('User-Agent') || 'N/A'}`); // User-Agent è un header di RICHIESTA, corretto
-//
-  //// Leggi il Content-Type dalla RICHIESTA
-  //// Sarà undefined per GET/DELETE, presente per POST/PUT/PATCH
-  //console.log(`Content-Type della Richiesta: ${req.get('Content-Type') || 'N/A (Nessun corpo o header)'}`);
-//
-  //// Leggi l'Host dalla RICHIESTA (è un header di richiesta!)
-  //console.log(`Host della Richiesta: ${req.get('Host') || 'N/A'}`);
-//
-  //// Puoi anche leggere req.hostname che è una proprietà più comoda
-  //console.log(`Hostname: ${req.hostname}`);
-//
-  //next();
-//};
-
-// usiamo il custom middleware myLogger 
-//app.use(myLogger);
-
 
 
 // middleware impostato a livello globale
@@ -46,14 +27,15 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 
-//Query string con /user/search va messo prima di /user/:id per evitare che express esequa prima user/:id
+//Query string con /user/search va messo prima di req.parmas ( /user/:id)  per evitare che express esequa prima la rotta con il parametro
+//La query string sono coppie chiave valore che vengono aggiunte dopo un '?' e separati tramite '&' es /products/search?chiave=valore&chiave2=valore2 
 app.get('/products/search', (req,res) =>
 {
   console.log(req.query)
-  res.send(`req.query.name ${req.query.name} req.query.age ${req.query.age}`)
+  res.send(`req.query.name ${req.query.name} req.query.category ${req.query.category} req.query.price ${req.query.price}`)
 })
 
-// Parametro nella richiesta (req.params)
+// Parametro nella richiesta (req.params) questo parametro e' un valore dinamico che puo' essere catturato con req.params
 app.get('/products/:id', (req,res) => 
 {
   let id = req.params.id;
@@ -109,3 +91,29 @@ app.listen(port, () => {
   '/data'             (POST) send JSON data
   `)
 })
+
+
+// my logger tolto 
+// funzione custom per stampare a schermo info utile ( custom logger tipo morgan) 
+//const myLogger = function (req, res, next) {
+  //console.log('--- MIDDLEWARE LOG TEST ---');
+  //console.log(`Richiesta in arrivo: ${req.method} ${req.originalUrl}`);
+  //console.log(`Timestamp: ${new Date().toISOString()}`); // Preferibile ISO string per standardizzazione
+  //console.log(`IP client: ${req.ip}`);
+  //console.log(`User-Agent: ${req.get('User-Agent') || 'N/A'}`); // User-Agent è un header di RICHIESTA, corretto
+//
+  //// Leggi il Content-Type dalla RICHIESTA
+  //// Sarà undefined per GET/DELETE, presente per POST/PUT/PATCH
+  //console.log(`Content-Type della Richiesta: ${req.get('Content-Type') || 'N/A (Nessun corpo o header)'}`);
+//
+  //// Leggi l'Host dalla RICHIESTA (è un header di richiesta!)
+  //console.log(`Host della Richiesta: ${req.get('Host') || 'N/A'}`);
+//
+  //// Puoi anche leggere req.hostname che è una proprietà più comoda
+  //console.log(`Hostname: ${req.hostname}`);
+//
+  //next();
+//};
+
+// usiamo il custom middleware myLogger 
+//app.use(myLogger);

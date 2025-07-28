@@ -25,7 +25,8 @@ Il routing è il modo in cui il tuo server risponde a diverse richieste HTTP bas
     Vengono usati per identificare una risorsa specifica o una sottorisorsa.
   * Come si definiscono: Li definisci nella tua rotta Express usando i due punti (:).
   * Come si accede: Sono disponibili come proprietà dell'oggetto req.params.id
-* **Gestione delle Query String:** Hai imparato come accedere ai parametri aggiunti all'URL dopo un ? (es. /search?q=nodejs) tramite req.query.
+* **Gestione delle Query String:** Hai imparato come accedere ai parametri aggiunti all'URL dopo un '?' e separati da '&' (es. /search?q=nodejs&framework=express) tramite req.query.q 
+    e req.query.framework in questo esempio.
   * Non sono definiti nella rotta; il client li aggiunge dinamicamente dopo il ?.
 
   * Sono usati per filtrare, ordinare, paginare o passare opzioni aggiuntive.
