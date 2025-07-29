@@ -9,7 +9,7 @@ const port = 3000;
 
 //libreria di node per leggere i file .env ( su python si usa os.environ.get("ENV_VARIABLE"))
 dotenv.config()
-console.log(process.env) // stampa tutto l'env compresi i valori che ho aggiunto al .env
+//console.log(process.env) // stampa tutto l'env compresi i valori che ho aggiunto al .env
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST,
@@ -41,14 +41,14 @@ app.get('/', (req, res) => {
 
 //Query string con /user/search va messo prima di req.parmas ( /user/:id)  per evitare che express esequa prima la rotta con il parametro
 //La query string sono coppie chiave valore che vengono aggiunte dopo un '?' e separati tramite '&' es /products/search?chiave=valore&chiave2=valore2 
-app.get('/products/search', (req,res) =>
+app.get('/test/products/search', (req,res) =>
 {
   console.log(req.query);
   res.send(`req.query.name ${req.query.name} req.query.category ${req.query.category} req.query.price ${req.query.price}`);
 })
 
 // Parametro nella richiesta (req.params) questo parametro e' un valore dinamico che puo' essere catturato con req.params
-app.get('/products/:id', (req,res) => 
+app.get('/test/products/:id', (req,res) => 
 {
   let id = req.params.id;
   let isDigit = /^[0-9]+$/.test(id);
@@ -91,8 +91,29 @@ app.post('/data', (req,res) =>
   });
 });
 
-async function testPool_startServer() {
-  try {
+//nuove rotte per testare le operazione CRUD
+
+app.get('/products', async (req,res) =>
+{
+    // Devo creare una rotta get che esegua semplicemente la query che ho scritto sotto nel testPool
+    // Ma devo gestire eventuali errori o il fatto che il db sia vuoto o spento
+    try {
+        const result = await pool.query('SELECT * from products');
+        res.status(200).json(result.rows);
+    } catch(err) {
+            console.log("error");
+    }
+});
+
+
+
+
+
+
+
+
+//async function testPool_startServer() {
+ // try {
     
     //const client = await pool.connect(); // Qui pool.connect() e usato per acqusire una connessione
     //const result = await client.query('SELECT NOW()') // viene eseguita una query che mostra l'ora attuale del db
@@ -103,25 +124,25 @@ async function testPool_startServer() {
     // Non ha bisogno di acquisire una connessione e di rilasciarla, per eseguire una semplice query.
     //const result = await pool.query('SELECT $1::text as name', ['Lenovo T14']);
     //const result = await pool.query('SELECT * FROM products WHERE id = $1', [2]);
-    const result = await pool.query('SELECT * FROM products');
-    console.log(result);
+    //const result = await pool.query('SELECT * FROM products');
+    //console.log(result.rows);
 
     app.listen(port, () => {
       console.log(`Example app listening on port ${port}`)
       console.log(`
         Route available:
-        '/'                 (GET) return a string
-        '/products/search'  (GET) return the query srting parameters searched
-        '/products/:id'     (GET) return the 'id'(accept only digit or return 400)
-        '/about'            (GET) return a JSON object
-        '/plain'            (GET) return a string with Content-type set to plain/text
-        '/data'             (POST) send JSON data
+        '/'                     (GET) return a string
+        'test/products/search'  (GET) return the query srting parameters searched
+        'test/products/:id'     (GET) return the 'id'(accept only digit or return 400)
+        '/about'                (GET) return a JSON object
+        '/plain'                (GET) return a string with Content-type set to plain/text
+        '/data'                 (POST) send JSON data
       `)
     })
-  } catch (err) {
-    console.error('Errore critico all\'avvio del server o del database:', err.stack);
-    process.exit(1); // Esci dal processo con un codice di errore
-  }
-};
+ // } catch (err) {
+ //   console.error('Errore critico all\'avvio del server o del database:', err.stack);
+ //   process.exit(1);
+ // }
+//};
 
-testPool_startServer();
+//testPool_startServer();
