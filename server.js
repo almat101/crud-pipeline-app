@@ -91,9 +91,11 @@ app.post('/data', (req,res) =>
   });
 });
 
-//nuove rotte per testare le operazione CRUD
+// Nuove rotte per testare le operazione CRUD
+// sui PC 42 e' necessario eseguire lo script ./db.sh per inserire i prodotti all interno del db ogni giorno.
 
-app.get('/products', async (req,res) =>
+//GET per recuperare tutti i prodotti (READ)
+app.get('/api/products', async (req,res) =>
 {
     // Devo creare una rotta get che esegua semplicemente la query che ho scritto sotto nel testPool
     // Ma devo gestire eventuali errori o il fatto che il db sia vuoto o spento
@@ -101,23 +103,118 @@ app.get('/products', async (req,res) =>
         const result = await pool.query('SELECT * from products');
         res.status(200).json(result.rows);
     } catch(err) {
-            console.log("error");
+            res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
     }
 });
 
+//GET per recuperare un prodotto specifico (READ)
+app.get('/api/products/:id', async (req,res) =>
+{
+    try {
+        let id = parseInt(req.params.id);
+        if(isNaN(id))
+          return res.status(400).json({message: 'Bad Request, id is not a number.'});
+        const result = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
+        if(result.rowCount == 0)
+          return res.status(404).json({message: 'Not found'})
+        res.status(200).json(result.rows);
+    } catch(err) {
+        res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
+    };
+});
 
+//POST per create un nuovo prodotto (CREATE)
+app.post('/api/products', async (req, res) => {
+  try {
+    let product = req.body; // req.body parse the JSON to a JS object
+    if (!product.name || product.name.trim() === "")
+      return res.status(400).json({ error: "Product name required" })
+    if (!product.price || isNaN(product.price)) // this is a number so we need to use isNaN 
+      return res.status(400).json({ error: "Price must be a valid number" })
+    if (!product.category || product.category.trim() === "")
+      return res.status(400).json({ error: "Category name required" })
+    const result = await pool.query(
+      'Insert INTO products (name, price, category) VALUES ($1, $2, $3) RETURNING *', // returning * is returning the inserted row
+       [product.name, product.price, product.category]); 
+    // this is a simple SQL operation but it use the $1 $2 $3 placeholders for prevent SQL injection
+    return res.status(201).send({ message: "Product created" , product: result.rows[0] });
+  } catch(err) {
+    res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
+  }
+});
 
+//PATCH per aggiornare un prodotto esistente (UPDATE)
+app.patch('/api/products/:id', async(req, res) => {
+  try {
+    let id = parseInt(req.params.id); //parse the id to a number 
+    if (isNaN(id)) // if parseInt fails check for Nan
+        return res.status(400).send("Id is not a number");
+    let product = req.body; // body checks
+    if (!('name' in product) && !('price' in product) && !('category' in product)) // at least one of this exist
+      return res.status(400).json({ error: "Update at leas one value" });
+    if (('name' in product) && product.name.trim() === "") //exist and is not empty
+      return res.status(400).json({ message: 'Name must be a valid string'});
+    if(('price' in product) && isNaN(product.price))
+      return res.status(400).json({ message: 'Price must be a valid number'});
+    if (('category' in product) && product.category.trim() === "")
+      return res.status(400).json({ message: 'Category must be a valid string'});
 
+    //UPDATE QUERY PG STYLE 
+    const field = [];
+    const value = [];
 
+    if ('name' in product)
+    {
+      value.push(product.name);
+      field.push("name = $" + (value.length));
+    }
+    if ('price' in product) {
+      value.push(product.price);
+      field.push("price = $" + (value.length));
+    }
+    if ('category' in product)
+    {
+      value.push(product.category)
+      field.push("category = $" + (value.length));
+    }
 
+    value.push(id); // need this also
+
+    const text = `UPDATE products SET ${field.join(', ')} WHERE id = $${value.length} RETURNING * `;
+    const result = await pool.query(text, value);
+    if (result.rowCount === 0)
+      return res.status(404).json({ message: 'Product not found'});
+    return res.status(200).json({ message: 'Product updated!' , product: result.rows[0]})
+
+  } catch(err) {
+    res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
+  }
+});
+
+// DELETE per cancellare un prodotto dato l'id specifico
+app.delete('/api/products/:id', async (req, res) => {
+  try 
+  {   
+    let id = parseInt(req.params.id);
+    if (isNaN(id))
+      return res.status(400).send("Id is not a number");
+    const result = await pool.query(`DELETE FROM products WHERE id = $1 RETURNING *`, [id]);
+    if (result.rowCount === 0)
+      return res.status(404).json({ message: 'No Product deleted'});
+    // return res.status(204).send( "Product deleted"); // this could be ok too
+    return res.status(200).json({ message: "Product deleted", product: result.rows[0]})
+  } catch(err) {
+    res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
+  }
+});
 
 
 //async function testPool_startServer() {
  // try {
     
-    //const client = await pool.connect(); // Qui pool.connect() e usato per acqusire una connessione
-    //const result = await client.query('SELECT NOW()') // viene eseguita una query che mostra l'ora attuale del db
-    //console.log(result);
+    // const client = await pool.connect(); // Qui pool.connect() e usato per acqusire una connessione
+    // const result = await client.query('SELECT NOW()') // viene eseguita una query che mostra l'ora attuale del db
+    // console.log(result);
     //client.release(); //Necessario il rilascio del client al pool
 
     // Test con await pool.query():
@@ -131,12 +228,18 @@ app.get('/products', async (req,res) =>
       console.log(`Example app listening on port ${port}`)
       console.log(`
         Route available:
-        '/'                     (GET) return a string
-        'test/products/search'  (GET) return the query srting parameters searched
-        'test/products/:id'     (GET) return the 'id'(accept only digit or return 400)
-        '/about'                (GET) return a JSON object
-        '/plain'                (GET) return a string with Content-type set to plain/text
-        '/data'                 (POST) send JSON data
+        '/'                    (GET) return a string
+        '/test/prods/search'   (GET) return the query srting parameters searched
+        '/test/prods/:id'      (GET) return the 'id'(accept only digit or return 400)
+        '/about'               (GET) return a JSON object
+        '/plain'               (GET) return a string with Content-type set to plain/text
+        '/data'                (POST) send JSON data
+        NEW CRUD route:
+        '/api/products         (GET) return all JSON value from DB (READ)
+        '/api/products/:id     (GET) return a JSON of the specific id request from DB (READ)
+        '/api/products         (POST) send JSON object and STORE it into DB (CREATE)
+        '/api/products/:id     (PATCH) update the JSON object stored into the DB from the given id (UPDATE)
+        '/api/products/:id     (DELETE) delete a product in the DB from the given id (DELETE)
       `)
     })
  // } catch (err) {
