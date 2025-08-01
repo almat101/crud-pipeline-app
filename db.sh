@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Nome del container PostgreSQL definito in docker-compose.yml
-CONTAINER_NAME="postgres_database_express"
+CONTAINER_NAME="postgres_products"
 
 # Carica le variabili d'ambiente dal file .env
 # Questo è importante se esegui lo script direttamente.
@@ -12,14 +12,14 @@ if [ -f .env ]; then
 fi
 
 # Controlla se le variabili d'ambiente necessarie sono impostate
-if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB" ]; then
+if [ -z "$POSTGRES_USER_PRODUCTS" ] || [ -z "$POSTGRES_PASSWORD_PRODUCTS" ] || [ -z "$POSTGRES_DB_PRODUCTS" ]; then
   echo "Errore: Le variabili d'ambiente POSTGRES_USER, POSTGRES_PASSWORD o POSTGRES_DB non sono impostate nel file .env."
   echo "Assicurati che il file .env esista e contenga queste variabili."
   exit 1
 fi
 
 echo "Tentativo di connessione al container PostgreSQL: $CONTAINER_NAME"
-echo "Utente: $POSTGRES_USER, Database: $POSTGRES_DB"
+echo "Utente: $POSTGRES_USER_PRODUCTS, Database: $POSTGRES_DB_PRODUCTS"
 
 # Comandi SQL da eseguire
 # Abbiamo aggiunto 'IF NOT EXISTS' per la creazione della tabella per renderla idempotente
@@ -44,9 +44,9 @@ INSERT INTO products (name, price, category) VALUES ('Dyson v15', 899.99, 'Home'
 # Usiamo PGPASSWORD per passare la password in modo sicuro.
 # Il flag -w (o --no-password) impedisce a psql di chiedere la password interattivamente.
 # Il flag -c esegue la stringa di comando SQL.
-docker exec -e PGPASSWORD="$POSTGRES_PASSWORD" \
+docker exec -e PGPASSWORD="$POSTGRES_PASSWORD_POSTGRES" \
   "$CONTAINER_NAME" \
-  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -w -c "$SQL_COMMANDS"
+  psql -U "$POSTGRES_USER_PRODUCTS" -d "$POSTGRES_DB_PRODUCTS" -w -c "$SQL_COMMANDS"
 
 # Controlla lo stato di uscita del comando docker exec
 if [ $? -eq 0 ]; then
