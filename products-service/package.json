@@ -1,7 +1,7 @@
 {
-  "name": "express_project_1",
+  "name": "products-service",
   "version": "1.0.0",
-  "description": "Some test with express framework",
+  "description": "Products basic CRUD",
   "main": "server.js",
   "type": "module",
   "scripts": {

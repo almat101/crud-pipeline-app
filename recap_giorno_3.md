@@ -49,4 +49,4 @@ Abbiamo anche discusso le prospettive di carriera tra backend Node.js con micros
 
 La mattinata di ripasso e sperimentazione con i middleware ti darà una base eccellente. Quando ti sentirai pronto, potremo passare alla parte successiva del "Giorno 3" (o "Giorno 4" se lo rimandiamo), che sarà l'**interazione effettiva con un database reale**, connettendo il tuo server Express a un DB e imparando a salvare e recuperare dati in modo persistente.
 
-Ottimo lavoro finora\!
+Ottimo lavoro finora!

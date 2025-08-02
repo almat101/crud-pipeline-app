@@ -1,9 +1,9 @@
 services:
-  postgres_auth:
+  db_auth:
     image: postgres:17-alpine3.22
-    container_name: postgres_auth
+    container_name: db_auth
     restart: always
-    env_file: ".env"
+    env_file: ".env" 
     environment:
       - POSTGRES_USER=${POSTGRES_USER_AUTH}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_AUTH}
@@ -12,13 +12,13 @@ services:
       - "5433:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
-      - ./init-scripts/auth:/docker-entrypoint-initdb.d
+      - ./auth-service/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - test
 
-  postgres_products:
+  db_products:
     image: postgres:17-alpine3.22
-    container_name: postgres_products
+    container_name: db_products
     restart: always
     env_file: ".env"
     environment:
@@ -29,7 +29,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_products_data:/var/lib/postgresql/data
-      - ./init-scripts/products:/docker-entrypoint-initdb.d
+      - ./products-service/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - test
 

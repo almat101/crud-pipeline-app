@@ -8,7 +8,7 @@ fclean:
 	docker compose down -v
 
 prune:
-	docker system prune -af -v
+	docker system prune -af --volumes
 
 .PHONY: all down fclean prune
 

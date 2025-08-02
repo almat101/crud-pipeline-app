@@ -8,7 +8,8 @@ const app = express();
 const port = 3000;
 
 //libreria di node per leggere i file .env ( su python si usa os.environ.get("ENV_VARIABLE"))
-dotenv.config()
+dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
+// console.log(process.env)
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST_PRODUCTS,
@@ -68,6 +69,7 @@ app.get('/api/products/:id', async (req,res) =>
 app.post('/api/products', async (req, res) => {
   try {
     let product = req.body; // req.body parse the JSON to a JS object
+    console.log(product);
     if (!product.name || product.name.trim() === "")
       return res.status(400).json({ error: "Product name required" })
     if (!product.price || isNaN(product.price)) // this is a number so we need to use isNaN 
@@ -232,14 +234,6 @@ app.delete('/api/products/:id', async (req, res) => {
     //const result = await pool.query('SELECT * FROM products');
     //console.log(result.rows);
 
-    // vecchie rotte
-    // '/'                    (GET) return a string
-    // '/test/prods/search'   (GET) return the query srting parameters searched
-    // '/test/prods/:id'      (GET) return the 'id'(accept only digit or return 400)
-    // '/about'               (GET) return a JSON object
-    // '/plain'               (GET) return a string with Content-type set to plain/text
-    // '/data'                (POST) send JSON data
-    // NEW CRUD route:
 
     app.listen(port, () => {
       console.log(`Example app listening on port ${port}`)
