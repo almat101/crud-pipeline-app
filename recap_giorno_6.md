@@ -24,9 +24,15 @@ Separare il microservizio prodotti in una propria cartella e iniziare la progett
 
 ## Prossimi passi
 
-- Completare lo scheletro del microservizio di autenticazione.
-- Implementare le prime rotte per la registrazione e il login degli utenti.
-- Integrare la generazione e la validazione dei JWT per la protezione delle API.
+- [x] Completare lo scheletro del microservizio di autenticazione.
+- [x] Suddividere il microservizio auth-service in routes,controllers per rendere il progetto modulare e ampliabile in futuro
+- [x] Testare le prime rotte per la registrazione e il login con dei console.log
+- [x] Implementare per la rotta /signup la validazione del body con libreria `joi`
+- [x] Implementare l'hashing della password con `bcrypt`
+- [x] Implementare una query preventiva per controllare che non esista un utente con lo stesso user e/o email associato
+- [x] Eseguire la query per salvare username,email,password_hastata nel db
+- [ ] Implementare la rotta /login 
+- [ ] Integrare la generazione e la validazione dei JWT per la protezione delle API.
 
 ## Risultato
 
