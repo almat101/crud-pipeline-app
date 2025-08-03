@@ -2,9 +2,10 @@ import Joi from 'joi';
 import bcrypt from 'bcrypt';
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
 
 dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
-console.log(process.env)
+// console.log(process.env)
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST_AUTH,
@@ -18,7 +19,8 @@ const pool = new Pool({
   maxLifetimeSeconds: 60
 });
 
-const schema = Joi.object({
+// schema per /signup
+const schema_signup = Joi.object({
     username: Joi.string()
         .alphanum()
         .min(3)
@@ -26,16 +28,25 @@ const schema = Joi.object({
         .required(),
 
     password: Joi.string()
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
+        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+        .required(),
 
     repeat_password: Joi.ref('password'),
 
     email: Joi.string()
         .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net','org','edu','gov', 'io', 'co', 'it', 'us', 'uk'] } })
+        .required()
 })
     .with('password', 'repeat_password');
 
+//schema per /login
+const schema_login = Joi.object({
+    email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net','org','edu','gov', 'io', 'co', 'it', 'us', 'uk'] } }),
 
+    password: Joi.string()
+        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+})
 
 // funzione che gestisce la logica di registrazione utente
 // riceve dati dal fronted trasformati da oggetto JS a oggetto JSON con AXIOS 
@@ -48,7 +59,7 @@ export const signup = async (req, res) => {
     try {
         console.log("Validation with Joi")
         let userJoi = req.body;
-        validateUser = await schema.validateAsync(userJoi);
+        validateUser = await schema_signup.validateAsync(userJoi);
         // console.log(validateUser)
         // res.status(201).json({message: "validation ok", body: validateUser})
     }
@@ -77,13 +88,43 @@ export const signup = async (req, res) => {
 }
 
 // funzione che gestisce la logica di login utente (riceve credenziali dal fronted, valida dati, cerca utente nel db eseguendo una query, se le credenziali sono corrette genera e restituisce un token JWT e risponde con successo o con errore 401)
+// Ricevi il JSON.
+// Valida i dati con Joi.
+// Cerca l'utente nel database.
+// Se l'utente non esiste, restituisci errore 401.
+// Confronta la password con l'hash salvato.
+// Se la password non coincide, restituisci errore 401.
+// Genera un JWT se tutto è corretto.
+// Restituisci il token JWT al client.
 export const login = async (req, res) => {
     //testing route
+    console.log("test login")
+    let validateUserLogin;
     try {
-        console.log("test login")
-        console.log(req.body);
-        res.status(200).json({message: "body received" , body_richiesta: req.body})
+        let userJoiLogin = req.body;
+        validateUserLogin = await schema_login.validateAsync(userJoiLogin);
+
+        // query per cercare l'utente dall email
+        const query = await pool.query('SELECT * FROM users WHERE email = $1', [ validateUserLogin.email ])
+        if (query.rowCount == 0)
+            return res.status(401).json( { message: "Unauthorized user"} );
+        const userFound = query.rows[0];
+        //Uso di bcrypt compare per confrontare la password in plaintext con la password hashata
+        const compared_password = await bcrypt.compare(validateUserLogin.password,userFound.password_hash);
+        // 401 se non coincidono
+        if (!compared_password)
+            return res.status(401).json( { message: "Unauthorized wrong password"} );
+        // payload con i dati da includere nel token
+        const payload = { 
+            userId : userFound.id,
+            username : userFound.username,
+            email : userFound.email
+        };
+        // Generazione token JWT con jsonwebtoken
+        const token =  jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }); //scadenza 7giorni dopo devo implementare al logout una blacklist dei token
+        // Restituzione del token al browser con ritorno 200 ok
+        res.status(200).json({ message: "Login succesful" , token })
     } catch (error) {
-        res.status(500).json({message: "Internal server error"})
+        res.status(500).json({ message: "Internal server error" })
     }
 }
