@@ -8,6 +8,15 @@ CREATE TABLE products (
 );
 
 
+-- Insert sample data into the products table
+INSERT INTO products (name, price, category, user_id) VALUES 
+('Mac m2', 999.99, 'Electronics', 1),
+('Pixel 9', 599.99, 'Electronics', 2),
+('Desk Chair', 149.99, 'Furniture', 1),
+('Coffee Table', 89.99, 'Furniture', 3),
+('Headphones', 49.99, 'Accessories', 2),
+('Backpack', 39.99, 'Accessories', 1);
+
 
 
 -- Se avessi usato un solo DATABASE per contenere entrambe le tabelle prodotti e utenti avrei potuto usare

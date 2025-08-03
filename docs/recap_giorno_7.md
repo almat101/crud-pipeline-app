@@ -8,9 +8,12 @@ Implementare una base di frontend per interagire con i microservizi `auth-servic
 - **Setup del progetto frontend**:
   - Creare una nuova cartella `frontend/` per il progetto.
   - Inizializzare il progetto con `npx create-react-app . ` e installare le dipendenze necessarie:
-    - Librerie consigliate: `axios` per le richieste HTTP, `dotenv` per la configurazione.
-    - Framework opzionale: `React`
-
+    - Librerie consigliate:
+      - `axios` per le richieste HTTP
+      - ~~`dotenv`~~ i file .env vengono gestiti da create-react-app usando questa sintassi `REACT_APP_NOME=valore`.
+      - `react-router-dom`: Per la gestione delle pagine/rotte (Login, Signup, Prodotti...).
+      - `jwt-decode`: Se vuoi leggere dati dal token JWT sul frontend (ad esempio per sapere l’ID utente loggato).
+    
 - **Creazione delle pagine principali**:
   - **Pagina di Signup**:
     - Form con campi: `username`, `email`, `password`, `repeat_password`.
@@ -33,12 +36,14 @@ Implementare una base di frontend per interagire con i microservizi `auth-servic
 ## Prossimi passi
 
 - [x] Creare la struttura base del progetto frontend.
-- [ ] Installare dipendenze necessarie
-- [ ] Implementare la pagina di Signup con validazione lato client.
+- [x] Installare dipendenze necessarie
+- [x] Abilitare CORS
+- [x] Implementare la pagina di Signup con validazione lato client.
 - [ ] Implementare la pagina di Login e salvare il token JWT.
 - [ ] Creare la pagina Prodotti e testare l'accesso autenticato.
-- [ ] Collegare il frontend ai microservizi `auth-service` e `products-service`.
-
+- [x] Collegare il frontend ai microservizi `auth-service` e `products-service`.
+- [x] Creare dockerfile per frontend e backend
+- [x] Creare Nginx e configurarlo per usarlo come reverse-proxy per collegare frontend con il backend
 ## Risultato atteso
 
 Al termine della giornata, il progetto avrà un frontend funzionante con:

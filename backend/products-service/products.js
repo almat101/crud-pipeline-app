@@ -5,10 +5,11 @@ import dotenv from 'dotenv'
 import { Pool } from 'pg'
 
 const app = express();
-const port = 3000;
+const port = 3020;
 
 //libreria di node per leggere i file .env ( su python si usa os.environ.get("ENV_VARIABLE"))
-dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
+// dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
+dotenv.config();
 // console.log(process.env)
 
 const pool = new Pool({

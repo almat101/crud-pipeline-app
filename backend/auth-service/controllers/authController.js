@@ -4,7 +4,8 @@ import { Pool } from 'pg'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 
-dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
+
+dotenv.config()
 // console.log(process.env)
 
 const pool = new Pool({
@@ -18,6 +19,18 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
   maxLifetimeSeconds: 60
 });
+
+const testDatabaseConnection = async () => {
+    try {
+        const result = await pool.query('SELECT 1');
+        console.log('Database Connection Successful:', result.rows);
+    } catch (error) {
+        console.error('Database Connection Error:', error);
+    }
+};
+
+
+testDatabaseConnection();
 
 // schema per /signup
 const schema_signup = Joi.object({
