@@ -2,6 +2,8 @@ import { useState} from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const URL_DEV = 'http://localhost:3030/auth/signup';
+//const URL_PROD = '/auth/signup';
 
 const SignupForm = () => {
     const navigate = useNavigate();
@@ -29,7 +31,7 @@ const SignupForm = () => {
         e.preventDefault();
         console.log('Form data:', FormData);
         try {
-            const response = await axios.post('/auth/signup', FormData, {
+            const response = await axios.post(`${URL_DEV}`, FormData, {
               headers : { 'Content-Type' : 'application/json' },
             });
             setMessage('Signup successful!');

@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 
 
 dotenv.config()
-// console.log(process.env)
+console.log(process.env)
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST_AUTH,
@@ -135,8 +135,8 @@ export const login = async (req, res) => {
         };
         // Generazione token JWT con jsonwebtoken
         const token =  jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }); //scadenza 7giorni dopo devo implementare al logout una blacklist dei token
-        // Restituzione del token al browser con ritorno 200 ok
-        res.status(200).json({ message: "Login succesful" , token })
+        // Restituzione del token al browser con ritorno 200 ok aggiunto user id per evitare il decode del token JWT nel frontend
+        res.status(200).json({ message: "Login succesful" , token : token , id : userFound.id })
     } catch (error) {
         res.status(500).json({ message: "Internal server error" })
     }

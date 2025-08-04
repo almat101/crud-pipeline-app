@@ -2,6 +2,10 @@ import { useState } from 'react';
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom'
 
+const URL_DEV = 'http://localhost:3030/auth/login';
+//const URL_PROD = '/auth/login';
+
+
 const LoginForm = () => {
   const navigate = useNavigate();
   const [FormData, setFormData] = useState({
@@ -25,15 +29,22 @@ const LoginForm = () => {
         e.preventDefault();
         console.log('Form data:', FormData);
         try {
-            const response = await axios.post('/auth/login', FormData, {
+            const response = await axios.post(`${URL_DEV}`, FormData, {
               headers : { 'Content-Type' : 'application/json' },
             });
             setMessage('Signup successful!');
-            console.log(response.data); // Per debug
+
+            const { token, id } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user_id',id);
+            console.log('Token saved to localStorage:', token);
+            console.log('User_id saved to localStorage:', id);
+
+
             navigate('/products');
         } catch (error) {
             setMessage(error.response?.data?.message || 'Signup failed!'); // Mostra un messaggio di errore
-            console.error(error.response?.data); // Per debug
+            console.error(error.response?.data);
     }
     
   };

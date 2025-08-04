@@ -39,8 +39,6 @@ Implementare una base di frontend per interagire con i microservizi `auth-servic
 - [x] Installare dipendenze necessarie
 - [x] Abilitare CORS
 - [x] Implementare la pagina di Signup con validazione lato client.
-- [ ] Implementare la pagina di Login e salvare il token JWT.
-- [ ] Creare la pagina Prodotti e testare l'accesso autenticato.
 - [x] Collegare il frontend ai microservizi `auth-service` e `products-service`.
 - [x] Creare dockerfile per frontend e backend
 - [x] Creare Nginx e configurarlo per usarlo come reverse-proxy per collegare frontend con il backend

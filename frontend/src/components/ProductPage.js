@@ -1,29 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const URL_DEV = 'http://localhost:3020/api/products';
+//const URL_PROD = '/api/products';
+
+
+// Retrive the token from local storage
+const token = localStorage.getItem('token');
+const BEARER_TOKEN = token;
+
 const ProductPage = () => {
     const [products, setProducts] = useState([]); // List of all products
     const [product] = useState(null); // Single product by ID
     const [addFormData, setAddFormData] = useState({ name: '', price: '', category: '', user_id: '' }); // For POST
     const [delProductId, setDeleteProductId] = useState(''); // ID for DELETE
     const [message, setMessage] = useState(''); // Success/Error messages
-
+    
     // Fetch all products
     const fetchProducts = async () => {
         try {
-            const response = await axios.get('/api/products');
-            setProducts(response.data);
+            const response = await axios.get(`${URL_DEV}`, {
+                headers :  { 'Authorization': `Bearer ${BEARER_TOKEN}` }
+            });
+            // console.log(response.data)
+            setProducts(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             setMessage('Failed to fetch products');
         }
     };
-
-
+    
+    
     // Add a new product
     const addProduct = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/api/products', addFormData);
+            const response = await axios.post(`${URL_DEV}`, addFormData, {
+                headers: { 'Authorization': `Bearer ${BEARER_TOKEN}` }
+            });
             setMessage('Product added successfully!');
             console.log(response)
             fetchProducts(); // Refresh the product list
@@ -31,20 +44,22 @@ const ProductPage = () => {
             setMessage('Failed to add product');
         }
     };
-
+    
   
 
     // Delete a product
     const deleteProduct = async () => {
         try {
-            await axios.delete(`/api/products/${delProductId}`);
+            await axios.delete(`${URL_DEV}/${delProductId}`, {
+                headers :  { 'Authorization': `Bearer ${BEARER_TOKEN}` }
+            });
             setMessage('Product deleted successfully!');
             fetchProducts(); // Refresh the product list
         } catch (error) {
             setMessage('Failed to delete product');
         }
     };
-
+    
     // Fetch all products on component mount
     useEffect(() => {
         fetchProducts();

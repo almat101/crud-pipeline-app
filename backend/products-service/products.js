@@ -3,14 +3,47 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import dotenv from 'dotenv'
 import { Pool } from 'pg'
+import cors from 'cors';
+import jwt from 'jsonwebtoken'
+
 
 const app = express();
 const port = 3020;
 
+dotenv.config();
+console.log(process.env)
+
+
+app.use(cors({
+  origin : ['http://localhost:3000','http://localhost'], //cors per il frontend per sviluppo locale e per nginx in produzione
+  methods : [ 'GET', 'POST', 'PATCH', 'DELETE'],
+  // credentials: true, 
+  }
+));
+
+// Middleware to authenticate requests using JWT, verify token, and extract user info
+function JWT_middleware_decode(req, res, next) {
+  //estraggo il token dall headers della richiesta
+  let token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res.status(401).json({ message: "Unauthorized token" });
+  try {
+      //Uso JWT verify per verificare il token
+      let decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded === null || decoded === undefined)
+          return res.status(401).json({ "message": "Unauthorized: Invalid or expired token" });
+      req.user = decoded;
+  } catch (error) {
+      return res.status(401).json({ message : "Internal token", error_message: error})
+  }
+  // Passa al prossimo middleware
+  next();
+}
+
+
+
 //libreria di node per leggere i file .env ( su python si usa os.environ.get("ENV_VARIABLE"))
 // dotenv.config({ path: '/home/ale/Desktop/express_project_1/.env' })
-dotenv.config();
-// console.log(process.env)
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST_PRODUCTS,
@@ -37,13 +70,16 @@ app.use(express.json());
 
 // Nuove rotte per testare le operazione CRUD
 
-//GET per recuperare tutti i prodotti (READ)
-app.get('/api/products', async (req,res) =>
+// GET per recuperare tutti i prodotti (READ) 
+// Aggiunta del middleware per verificare la validita del token JWT
+app.get('/api/products', JWT_middleware_decode, async (req,res) =>
 {
     // Devo creare una rotta get che esegua semplicemente la query che ho scritto sotto nel testPool
     // Ma devo gestire eventuali errori o il fatto che il db sia vuoto o spento
     try {
-        const result = await pool.query('SELECT * from products');
+        let userId = req.user.userId;
+        console.log(userId)
+        const result = await pool.query(`SELECT * from products WHERE user_id = $1`, [userId]);
         res.status(200).json(result.rows);
     } catch(err) {
             res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
@@ -51,7 +87,8 @@ app.get('/api/products', async (req,res) =>
 });
 
 //GET per recuperare un prodotto specifico (READ)
-app.get('/api/products/:id', async (req,res) =>
+// aggiunta middleware JWT
+app.get('/api/products/:id',JWT_middleware_decode, async (req,res) =>
 {
     try {
         let id = parseInt(req.params.id);
@@ -67,7 +104,7 @@ app.get('/api/products/:id', async (req,res) =>
 });
 
 //POST per create un nuovo prodotto (CREATE)
-app.post('/api/products', async (req, res) => {
+app.post('/api/products',JWT_middleware_decode, async (req, res) => {
   try {
     let product = req.body; // req.body parse the JSON to a JS object
     console.log(product);
@@ -91,7 +128,7 @@ app.post('/api/products', async (req, res) => {
 });
 
 //PATCH per aggiornare un prodotto esistente (UPDATE)
-app.patch('/api/products/:id', async(req, res) => {
+app.patch('/api/products/:id', JWT_middleware_decode, async(req, res) => {
   try {
     let id = parseInt(req.params.id); //parse the id to a number 
     if (isNaN(id)) // if parseInt fails check for Nan
@@ -146,7 +183,7 @@ app.patch('/api/products/:id', async(req, res) => {
 });
 
 // DELETE per cancellare un prodotto dato l'id specifico
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', JWT_middleware_decode, async (req, res) => {
   try 
   {   
     let id = parseInt(req.params.id);
