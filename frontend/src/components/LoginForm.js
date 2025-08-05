@@ -1,12 +1,23 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import axios from 'axios';
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { AuthContext }  from '../context/AuthContext'
 
-const URL_DEV = 'http://localhost:3030/auth/login';
+const isDev = process.env.REACT_APP_IS_DEV === 'true';
+ 
+const URL = isDev ? 'http://localhost:3030/auth/login' : '/auth/login';
+
+
+console.log(URL)
+
+// const URL_DEV = 'http://localhost:3030/auth/login';
 //const URL_PROD = '/auth/login';
 
 
 const LoginForm = () => {
+
+const { login, saveId } = useContext(AuthContext);
+  
   const navigate = useNavigate();
   const [FormData, setFormData] = useState({
     email: '',
@@ -29,17 +40,16 @@ const LoginForm = () => {
         e.preventDefault();
         console.log('Form data:', FormData);
         try {
-            const response = await axios.post(`${URL_DEV}`, FormData, {
+            const response = await axios.post(`${URL}`, FormData, {
               headers : { 'Content-Type' : 'application/json' },
             });
             setMessage('Signup successful!');
-
+            //destrucuring da un oggetto
             const { token, id } = response.data;
-            localStorage.setItem('token', token);
-            localStorage.setItem('user_id',id);
-            console.log('Token saved to localStorage:', token);
-            console.log('User_id saved to localStorage:', id);
-
+            //salvo id tramite context
+            saveId(id);
+            //salvo il token tramite context
+            login(token);
 
             navigate('/products');
         } catch (error) {

@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+// import { AuthContext } from '../context/AuthContext';
+import { Interceptor } from '../interceptor/axiosInterceptor';
 
-const URL_DEV = 'http://localhost:3020/api/products';
-//const URL_PROD = '/api/products';
 
+const isDev = process.env.REACT_APP_IS_DEV === 'true';
+const URL = isDev ? 'http://localhost:3020/api/products' :  '/api/products';
+
+
+//invocazione dell interceptor che aggiunge il token bearer ad ogni richiesta
+Interceptor();
 
 // Retrive the token from local storage
-const token = localStorage.getItem('token');
-const BEARER_TOKEN = token;
-
 const ProductPage = () => {
+    
+    //uso il token prendendolo dallo stato globale 
+    // questo e' reso superfluo dall uso dell interceptor
+    // const { token } = useContext(AuthContext);
+      
     const [products, setProducts] = useState([]); // List of all products
     const [product] = useState(null); // Single product by ID
     const [addFormData, setAddFormData] = useState({ name: '', price: '', category: '', user_id: '' }); // For POST
@@ -17,29 +25,30 @@ const ProductPage = () => {
     const [message, setMessage] = useState(''); // Success/Error messages
     
     // Fetch all products
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
-            const response = await axios.get(`${URL_DEV}`, {
-                headers :  { 'Authorization': `Bearer ${BEARER_TOKEN}` }
-            });
-            // console.log(response.data)
-            setProducts(Array.isArray(response.data) ? response.data : []);
+            // if (token) {
+            //     console.log(token)
+                const response = await axios.get(`${URL}`);
+                // console.log(response.data)
+                setProducts(Array.isArray(response.data) ? response.data : []);
+            // }
         } catch (error) {
             setMessage('Failed to fetch products');
         }
-    };
+    },[]);
     
     
     // Add a new product
     const addProduct = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${URL_DEV}`, addFormData, {
-                headers: { 'Authorization': `Bearer ${BEARER_TOKEN}` }
-            });
-            setMessage('Product added successfully!');
-            console.log(response)
-            fetchProducts(); // Refresh the product list
+            // if (token) {
+                const response = await axios.post(`${URL}`, addFormData );
+                setMessage('Product added successfully!');
+                console.log(response)
+                fetchProducts(); // Refresh the product list
+            // }
         } catch (error) {
             setMessage('Failed to add product');
         }
@@ -50,11 +59,12 @@ const ProductPage = () => {
     // Delete a product
     const deleteProduct = async () => {
         try {
-            await axios.delete(`${URL_DEV}/${delProductId}`, {
-                headers :  { 'Authorization': `Bearer ${BEARER_TOKEN}` }
-            });
-            setMessage('Product deleted successfully!');
-            fetchProducts(); // Refresh the product list
+            // if (token) {
+                await axios.delete(`${URL}/${delProductId}`);
+                setMessage('Product deleted successfully!');
+                fetchProducts(); // Refresh the product list
+
+            // }
         } catch (error) {
             setMessage('Failed to delete product');
         }
@@ -62,8 +72,9 @@ const ProductPage = () => {
     
     // Fetch all products on component mount
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        // if (token)
+            fetchProducts();
+    }, [fetchProducts ]);
 
     return (
         <div>

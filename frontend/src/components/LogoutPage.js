@@ -1,9 +1,19 @@
-
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const Logout = () => {
+
+    const { logout, deleteId } = useContext(AuthContext);
+
     const handleClick = () => {
+
         console.log("logout logic");
-        localStorage.clear();
+        // remove token from local storage
+        logout();
+        // delete id from local storage
+        deleteId();
+        
+        // localStorage.clear();
     }
 
     return (

@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 
 
 dotenv.config()
-console.log(process.env)
+// console.log(process.env)
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST_AUTH,

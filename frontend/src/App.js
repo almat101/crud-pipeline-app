@@ -7,9 +7,13 @@ import SignupForm from './components/SignupForm';
 import LoginForm from './components/LoginForm';
 import ProductPage from './components/ProductPage'
 import LogoutPage from './components/LogoutPage'
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   return (
+
+    <AuthProvider>
+
     <Router>
       <div className="App">
         <Header />
@@ -25,6 +29,8 @@ function App() {
         <Footer />
       </div>
     </Router>
+
+    </AuthProvider>
   );
 }
 
