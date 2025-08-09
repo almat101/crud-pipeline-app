@@ -49,7 +49,8 @@ const { login, saveId } = useContext(AuthContext);
             //piccolo delay per navigare a /products 
             setTimeout(() => {
               navigate('/products');
-            }, 750);
+            }, 500);
+
         } catch (error) {
             setMessage(error.response?.data?.message || 'Signup failed!'); // Mostra un messaggio di errore
             setVariant('danger')
@@ -60,7 +61,6 @@ const { login, saveId } = useContext(AuthContext);
   return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
             <Form className="p-4 border rounded shadow" onSubmit={handleSubmit}>
-               {/* {message} {} */}
               <Form.Group className="mb-3" controlId="formBasicEmail">
                 <Form.Label>Email address</Form.Label>
                 <Form.Control 
@@ -81,7 +81,7 @@ const { login, saveId } = useContext(AuthContext);
                   placeholder="Password" />
               </Form.Group>
               <Button variant="primary" type="submit" className="w-100">
-                Submit
+                Login
               </Button>
               {message && <Alert variant={variant} className='mt-3'>{message}</Alert>}
             </Form>

@@ -22,9 +22,9 @@ Effettuare un refactoring del frontend per migliorare l'esperienza utente e l'es
 
 ## Prossimi passi
 - [x] Refactoring del componente LoginForm con React Bootstrap.
-- [ ] Refactoring della Navbar per renderla responsiva e moderna.
-- [ ] Refactoring della ProductPage per migliorare la leggibilità e l'estetica.
-- [ ] Refactoring della LogoutPage per aggiungere un feedback visivo.
+- [x] Refactoring della Navbar per renderla responsiva e moderna.
+- [x] Logout integrato nella Navbar in Profile/logout
+- [x] Refactoring della ProductPage per migliorare la leggibilità e l'estetica.
 
 ## Risultato atteso
 

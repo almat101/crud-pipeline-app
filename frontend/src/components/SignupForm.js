@@ -1,11 +1,13 @@
 import { useState} from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Alert, Container, Form, Button } from 'react-bootstrap';
 
 const URL_DEV = 'http://localhost:3030/auth/signup';
 //const URL_PROD = '/auth/signup';
 
 const SignupForm = () => {
+
     const navigate = useNavigate();
     //stato iniziale del form
     const [ FormData, setFormData] = useState({
@@ -16,6 +18,7 @@ const SignupForm = () => {
     });
 
     const [message, setMessage] = useState(''); // Stato per messaggi di successo o errore
+    const [variant, setVariant] = useState(''); // Stato per Alert
     
     //gestione dei cambiamenti nei campi
     const handleChange = (e) => {
@@ -35,57 +38,71 @@ const SignupForm = () => {
               headers : { 'Content-Type' : 'application/json' },
             });
             setMessage('Signup successful!');
+            setVariant('success')
             console.log(response.data); // Per debug
-            navigate('/login');
+            setTimeout(()=> {
+              navigate('/login');
+            }, 2000)
         } catch (error) {
             setMessage(error.response?.data?.message || 'Signup failed!'); // Mostra un messaggio di errore
+            setVariant('danger')
             console.error(error.response?.data); // Per debug
     }
     
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Signup</h2>
-        {message && <p>{message}</p>} {}
-      <label>
-        Username:
-        <input
-            type="text"
-            name="username"
-            value={FormData.username} 
-            onChange={handleChange}
-        />
-      </label>
-      <label>
-        Email:
-        <input 
-            type="email"
-            name="email"
-            value={FormData.email}
-            onChange={handleChange}
-        />
-      </label>
-      <label>
-        Password:
-        <input
-            type="password"
-            name="password"
-            value={FormData.password}
-            onChange={handleChange}
-        />
-      </label>
-      <label>
-        Repeat Password:
-        <input
-          type="password"
-          name="repeat_password"
-          value={FormData.repeat_password}
-          onChange={handleChange}
-        />
-      </label>
-      <button type="submit">Signup</button>
-    </form>
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+            <Form className="p-4 border rounded shadow" onSubmit={handleSubmit}>
+              
+              <Form.Group className="mb-3" controlId="formBasicEmail">
+                <Form.Label>Username</Form.Label>
+                <Form.Control 
+                  type="text"
+                  name="username"
+                  value={FormData.username}
+                  onChange={handleChange}
+                  placeholder="Enter username" />
+              </Form.Group>
+
+              
+              <Form.Group className="mb-3" controlId="formBasicEmail">
+                <Form.Label>Email address</Form.Label>
+                <Form.Control 
+                  type="email"
+                  name="email"
+                  value={FormData.email}
+                  onChange={handleChange}
+                  placeholder="Enter email" />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Label>Password</Form.Label>
+                <Form.Control 
+                  type="password"
+                  name="password"
+                  value={FormData.password}
+                  onChange={handleChange}
+                  placeholder="Password" />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Label>Repeat password</Form.Label>
+                <Form.Control 
+                  type="password"
+                  name="repeat_password"
+                  value={FormData.repeat_password}
+                  onChange={handleChange}
+                  placeholder="Repeat password" />
+              </Form.Group>
+
+
+              <Button variant="primary" type="submit" className="w-100">
+                Signup
+              </Button>
+              {message && <Alert variant={variant} className='mt-3'>{message}</Alert>}
+            </Form>
+      </Container>
   );
 };
 
