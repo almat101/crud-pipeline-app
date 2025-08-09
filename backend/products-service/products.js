@@ -11,7 +11,7 @@ const app = express();
 const port = 3020;
 
 dotenv.config();
-console.log(process.env)
+// console.log(process.env)
 
 
 app.use(cors({

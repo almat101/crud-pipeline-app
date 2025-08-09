@@ -2,22 +2,16 @@ import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'
 import { AuthContext }  from '../context/AuthContext'
+import { Alert, Container, Form, Button } from 'react-bootstrap';
+
 
 const isDev = process.env.REACT_APP_IS_DEV === 'true';
- 
 const URL = isDev ? 'http://localhost:3030/auth/login' : '/auth/login';
-
-
-console.log(URL)
-
-// const URL_DEV = 'http://localhost:3030/auth/login';
-//const URL_PROD = '/auth/login';
-
 
 const LoginForm = () => {
 
 const { login, saveId } = useContext(AuthContext);
-  
+
   const navigate = useNavigate();
   const [FormData, setFormData] = useState({
     email: '',
@@ -25,6 +19,7 @@ const { login, saveId } = useContext(AuthContext);
   });
 
   const [message, setMessage] = useState(''); // Stato per messaggi di successo o errore
+  const [variant, setVariant] = useState(''); // Stato per Alert
 
   const handleChange = (e) => {
     const {name, value} = e.target;
@@ -50,39 +45,47 @@ const { login, saveId } = useContext(AuthContext);
             saveId(id);
             //salvo il token tramite context
             login(token);
-
-            navigate('/products');
+            setVariant('success');
+            //piccolo delay per navigare a /products 
+            setTimeout(() => {
+              navigate('/products');
+            }, 750);
         } catch (error) {
             setMessage(error.response?.data?.message || 'Signup failed!'); // Mostra un messaggio di errore
+            setVariant('danger')
             console.error(error.response?.data);
     }
-    
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      {message && <p>{message}</p>} {}
-      <label>
-        Email:
-        <input 
-          type="email"
-          name="email"
-          value={FormData.email}
-          onChange={handleChange}
-        />
-      </label>
-      <label>
-        Password:
-        <input
-          type="password"
-          name="password"
-          value={FormData.password}
-          onChange={handleChange}
-        />
-      </label>
-      <button type="submit">Login</button>
-    </form>
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+            <Form className="p-4 border rounded shadow" onSubmit={handleSubmit}>
+               {/* {message} {} */}
+              <Form.Group className="mb-3" controlId="formBasicEmail">
+                <Form.Label>Email address</Form.Label>
+                <Form.Control 
+                  type="email"
+                  name="email"
+                  value={FormData.email}
+                  onChange={handleChange}
+                  placeholder="Enter email" />
+              </Form.Group>
+
+              <Form.Group className="mb-3" controlId="formBasicPassword">
+                <Form.Label>Password</Form.Label>
+                <Form.Control 
+                  type="password"
+                  name="password"
+                  value={FormData.password}
+                  onChange={handleChange}
+                  placeholder="Password" />
+              </Form.Group>
+              <Button variant="primary" type="submit" className="w-100">
+                Submit
+              </Button>
+              {message && <Alert variant={variant} className='mt-3'>{message}</Alert>}
+            </Form>
+      </Container>
   );
 };
 

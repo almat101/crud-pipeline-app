@@ -1,9 +1,12 @@
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from 'react-router-dom'
 
 const Logout = () => {
 
     const { logout, deleteId } = useContext(AuthContext);
+
+    const navigate = useNavigate();
 
     const handleClick = () => {
 
@@ -13,7 +16,7 @@ const Logout = () => {
         // delete id from local storage
         deleteId();
         
-        // localStorage.clear();
+        navigate('/login');
     }
 
     return (

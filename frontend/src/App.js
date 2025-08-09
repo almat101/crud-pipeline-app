@@ -8,6 +8,7 @@ import LoginForm from './components/LoginForm';
 import ProductPage from './components/ProductPage'
 import LogoutPage from './components/LogoutPage'
 import { AuthProvider } from './context/AuthContext'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (

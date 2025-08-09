@@ -38,3 +38,4 @@ Al termine della giornata, il progetto avrà:
 - Una gestione migliorata del token JWT nel frontend.
 Una soluzione per evitare il refresh manuale della pagina prodotti.
 - Un flusso di autenticazione più fluido e affidabile.
+- La creazione dell'interceptor ha reso superfluo l'uso dello stato globale
