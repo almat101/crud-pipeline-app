@@ -8,9 +8,8 @@ services:
     #dockerfile specifico per modalita sviluppo locale
        #sovrascrive il comando del dockerfile
     command: npm run start
-    env_file: ".env.dev"
+    env_file: ".env"
     ports:
-      # porta 3000 per sviluppo locale
       - 3000:3000
     volumes:
     - ./frontend:/app # uso il volume app per avere l hot reload
@@ -29,7 +28,7 @@ services:
     container_name: auth-service
     #sovrascrive il comando del dockerfile
     command: npm run dev
-    env_file: ".env.dev"
+    env_file: ".env"
     ports:
       - 3030:3030
     volumes:
@@ -47,7 +46,7 @@ services:
     container_name: products-service
        #sovrascrive il comando del dockerfile
     command: npm run dev
-    env_file: ".env.dev"
+    env_file: ".env"
     ports:
       - 3020:3020
     volumes:
@@ -64,7 +63,7 @@ services:
     image: postgres:17-alpine3.22
     container_name: db_auth
     restart: always
-    env_file: ".env.dev" 
+    env_file: ".env"
     environment:
       - POSTGRES_USER=${POSTGRES_USER_AUTH}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_AUTH}
@@ -79,7 +78,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s   
+      start_period: 20s
     networks:
       - test
 
@@ -87,7 +86,7 @@ services:
     image: postgres:17-alpine3.22
     container_name: db_products
     restart: always
-    env_file: ".env.dev"
+    env_file: ".env"
     environment:
       - POSTGRES_USER=${POSTGRES_USER_PRODUCTS}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_PRODUCTS}
