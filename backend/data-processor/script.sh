@@ -8,7 +8,7 @@ echo "Creazione dell'ambiente virtuale (.venv)..."
 python3 -m venv .venv
 
 echo "Attivazione dell'ambiente virtuale..."
-source venv/bin/activate
+source .venv/bin/activate
 
 echo "Installazione delle dipendenze..."
 pip install -r requirements.txt
