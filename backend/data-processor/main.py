@@ -2,16 +2,16 @@ import logging
 from fastapi import FastAPI
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.common.action_chains import ActionChains
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
 
 SCRAPE_URL= "https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
 SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"
 SELECTOR_TITLE = "h2.headline-6.ItemTitle-module_item-title__VuKDo"
 SELECTOR_CITY = "div.PostingTimeAndPlace-module_date-location__1Owcv span"
 SELECTOR_PROVINCE = "div.PostingTimeAndPlace-module_date-location__1Owcv span.caption.small.city"
-SELECTOR_PRICE = "p.index-module_price__N7M2x.x-SmallCard-module_price__yERv7.index-module_small__4SyUf"
+SELECTOR_PRICE = "div.index-module_price-group__B9-pV p.index-module_price__N7M2x"
 
 app = FastAPI()
 
@@ -82,6 +82,7 @@ def scrape():
         logger.error(f"Error during scrape: {e}")
         return {"message": "scrape failed", "error" : str(e)}
     finally:
+        #teardown here to always cleanup browser driver
         if(driver):
             teardown(driver)
 
