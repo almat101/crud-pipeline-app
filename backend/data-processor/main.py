@@ -5,8 +5,17 @@ from selenium.webdriver.common.by import By
 # from selenium.webdriver.common.action_chains import ActionChains
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
+from pymongo import MongoClient
+
+
+#### MONGO DB connection creation ####
+client = MongoClient("mongodb://localhost:27017/")
+db = client["products_db"]
+collection = db["raw_products"]
+
 
 SCRAPE_URL= "https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
+# SCARPE_URL2="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
 SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"
 SELECTOR_TITLE = "h2.headline-6.ItemTitle-module_item-title__VuKDo"
 SELECTOR_CITY = "div.PostingTimeAndPlace-module_date-location__1Owcv span"
@@ -46,7 +55,7 @@ def scrape():
             logger.warning("No products found on the page. Check the CSS selector or page structure.")
             return {"message": "No products found", "result": []}
 
-        results = []
+        raw_data = []
         for product in products:
             try:
                 #Selenium is executing js to extract the title from css query selector using . to connect class name
@@ -62,8 +71,9 @@ def scrape():
                     "city": city.strip(),
                     "province": province.strip(),
                     "price": price.strip(),
+                    "shipping_available": False
                 }
-                results.append(product_data)
+                raw_data.append(product_data)
 
             except Exception as e:
                 # Log the error for this product and continue with the next one
@@ -74,10 +84,41 @@ def scrape():
         #teardown(driver)
 
         # Log a message indicating the scraping process was completed successfully
-        logger.info(f"Scraping completed succesfully: {results}")
-        # Return a JSON response with a success message and the retrieved text
-        return {"message": "Scrape success", "result": results}
+        logger.info(f"Scraping completed succesfully: {raw_data}")
+
+
+        #implementazione salvataggio dati in mongo db
+        try:
+            cleaned_data = []
+            collection.delete_many({})
+            for product in raw_data:
+                filter_query = {"title": product["title"]}  # This finds a document with the same title
+                update_statement = {"$set": product}       # This sets all fields to the new data
+                logger.info(f"product price: {product['price']}")
+                #skipping(removing) sold item
+                if ("Venduto" in product['price']):
+                    logger.info(f"skip the product is already sold {product['price']}")
+                    continue
+                #check 'shipping_available' boolean
+                if ("Spedizione disponibile" in product['price']):
+                    logger.info(f"shipping true")
+                    product['shipping_available'] = True
+                #removing the $Spedizone disponibile, taking only the numeric part
+                product['price'] = product['price'].split()[0]
+                collection.update_one(filter_query, update_statement, upsert=True)
+                cleaned_data.append(product)
+            ### old implementation 
+            # collection.delete_many({})
+            # collection.insert_many(raw_data)
+
+            ## returning a fresh list tha has not been modified by mongodb update_one or insert_many (does not containt objectId created by mongodb) avoid serialization errors 
+            return {"message": "Scrape success and data saved.", "result" : cleaned_data}
     
+        except Exception as e:
+            logger.error(f"Error saving data to mongodb: {e}")
+            return {f"message": "error saving data to mongodb", "error" : str(e)}
+
+
     except Exception as e:
         logger.error(f"Error during scrape: {e}")
         return {"message": "scrape failed", "error" : str(e)}

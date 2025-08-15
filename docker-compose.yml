@@ -45,6 +45,14 @@ services:
     networks:
       - test
 
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   db_auth:
     image: postgres:17-alpine3.22
     container_name: db_auth
@@ -88,6 +96,7 @@ services:
 volumes:
   postgres_auth_data:
   postgres_products_data:
+  mongo_data:
 
 networks:
   test:
