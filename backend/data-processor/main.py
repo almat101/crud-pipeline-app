@@ -15,17 +15,19 @@ db = client["products_db"]
 collection = db["raw_products"]
 
 
-#SCRAPE_URL= "https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
+# SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
+# PRODUCT_NAME="thinkpad t14"
 SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
 PRODUCT_NAME="iphone 15"
+
 UNWANTED_LIST= ["cover","case","protezione","custodia"]
 SELECTOR_PRODUCTS = "a.SmallCard-module_link__hOkzY"
-#SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"
+# SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"
 SELECTOR_TITLE = "h2.headline-6.ItemTitle-module_item-title__VuKDo"
 SELECTOR_CITY = "div.PostingTimeAndPlace-module_date-location__1Owcv span"
 SELECTOR_PROVINCE = "div.PostingTimeAndPlace-module_date-location__1Owcv span.caption.small.city"
 SELECTOR_PRICE = "div.index-module_price-group__B9-pV p.index-module_price__N7M2x"
-
+MIN_PRICE = 0.00
 app = FastAPI()
 
 # Configure logging to display messages at the INFO level
@@ -41,6 +43,14 @@ def read_root():
 
 @app.get("/scrape")
 def scrape():
+    """
+    Scrapes product data from the target website using Selenium, processes and cleans the extracted data,
+    and saves the results into MongoDB. Handles filtering, normalization, and error logging.
+
+    Returns:
+        dict: A response message and the list of cleaned products if successful,
+              or an error message if scraping or saving fails.
+    """
     try:
         logger.info("selenium driver start..")
         # Initialize the Selenium WebDriver and navigate to the target URL
@@ -68,8 +78,6 @@ def scrape():
                 province = driver.execute_script(f"return arguments[0].querySelector('{SELECTOR_PROVINCE}')?.textContent || '';", product)
                 price = driver.execute_script(f"return arguments[0].querySelector('{SELECTOR_PRICE}')?.textContent || '';", product)
                 url = product.get_attribute("href")
-                # price_html = driver.execute_script("return arguments[0].outerHTML;", product)
-                # logger.info(f"Price HTML: {price_html}")
 
                 product_data = {
                     "title": title.strip(),
@@ -104,6 +112,15 @@ def scrape():
             teardown(driver)
 
 def setup():
+    """
+    Initializes the Selenium WebDriver (Chrome) and navigates to the target URL.
+
+    Returns:
+        webdriver.Chrome: The initialized WebDriver instance.
+
+    Raises:
+        Exception: If there is an error during WebDriver setup.
+    """
     try:
         # Initialize the Selenium WebDriver (Chrome) and navigate to the target URL
         driver = webdriver.Chrome()
@@ -115,14 +132,32 @@ def setup():
 
 
 def teardown(driver):
+    """
+    Quits the Selenium WebDriver and closes the browser.
+
+    Args:
+        driver (webdriver.Chrome): The WebDriver instance to quit.
+
+    Logs:
+        Any exception that occurs during the teardown process.
+    """
     try:
         # Quit the WebDriver and close the browser
         driver.quit()
     except Exception as e:
         logger.error(f"Error during WebDriver teardown: {e}")
 
-#implementazione pulizia e salvataggio dati in mongo db
-def saving_data(raw_data): 
+def saving_data(raw_data):
+    """
+    Pulisce i dati grezzi, applica i filtri, aggiorna/inserisce i prodotti in MongoDB
+    e restituisce una lista dei prodotti puliti.
+    
+    Args:
+        raw_data (list): Lista di dizionari con i dati grezzi dei prodotti.
+    
+    Returns:
+        dict: Messaggio di successo e lista dei prodotti puliti.
+    """
     try:
         cleaned_data = []
         ### delete all elements in the collections
@@ -132,16 +167,15 @@ def saving_data(raw_data):
             update_statement = {"$set": product}       # This sets all fields to the new data
             ###title
             product['title'] = product['title'].lower()
-            #logger.info(f"product title is: {product['title']}")
             #filer product that does not contain product_name in product_title
             if not(PRODUCT_NAME in product['title']):
-                logger.info(f"skip the product does not contain {PRODUCT_NAME} in {product['title']}")
+                logger.info(f"Skipping product: '{PRODUCT_NAME}' not found in title '{product['title']}'")
                 continue
             #looping on a list of unwanted names, if one name is found in the product_title skip the product
             skip_product = False
             for unwanted_product in UNWANTED_LIST:
                 if (unwanted_product in product['title']):
-                    logger.info(f"skip the product contain: {unwanted_product} in: {product['title']}")
+                    logger.info(f"Skipping product: '{unwanted_product}' found in title '{product['title']}'")
                     skip_product = True
             if(skip_product == True):
                 continue
@@ -149,18 +183,21 @@ def saving_data(raw_data):
             product['price'] = product['price'].lower()
             #skipping(removing) sold item
             if ("venduto" in product['price']):
-                logger.info(f"skip the product is already sold {product['price']}")
+                logger.info(f"Skipping '{product['title']}', already sold.")
                 continue
             #check 'shipping_available' boolean
             if ("spedizione disponibile" in product['price']):
                 logger.info(f"Setting shipping_available to true")
                 product['shipping_available'] = True
             try:
+                if (product['price'] == ''):
+                    logger.info(f"Skipping '{product['title']}', the price is not defined.")
+                    continue
                 #removing the $Spedizone disponibile, taking only the numeric part converted to int
                 product['price'] = float(product['price'].split()[0])
                 #removing low price for spam product accessory broken phone ecc
-                if (product['price'] <= 150.00):
-                    logger.info(f"{product['price']} is too low for {product['title']}")
+                if (product['price'] <= MIN_PRICE):
+                    logger.info(f"Skipping '{product['title']}', price '{product['price']}' is too low.")
                     continue
             except Exception as e:
                 logger.error(f"Price conversion error: {e}")
