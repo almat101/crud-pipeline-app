@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Uscita immediata se un comando fallisce
 set -e
 
 echo $PWD
@@ -14,4 +13,4 @@ echo "Installazione delle dipendenze..."
 pip install -r requirements.txt
 
 echo "L'ambiente virtuale è stato creato e le dipendenze sono state installate correttamente."
-echo "Per attivarlo, usa: source venv/bin/activate"
+echo "Per attivarlo:  source .venv/bin/activate"

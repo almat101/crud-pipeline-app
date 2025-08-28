@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 # from selenium.webdriver.common.action_chains import ActionChains
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
@@ -18,16 +19,14 @@ collection = db["raw_products"]
 # SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
 # PRODUCT_NAME="thinkpad t14"
 SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
-PRODUCT_NAME="iphone 15"
 
-UNWANTED_LIST= ["cover","case","protezione","custodia"]
 SELECTOR_PRODUCTS = "a.SmallCard-module_link__hOkzY"
 # SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"
 SELECTOR_TITLE = "h2.headline-6.ItemTitle-module_item-title__VuKDo"
 SELECTOR_CITY = "div.PostingTimeAndPlace-module_date-location__1Owcv span"
 SELECTOR_PROVINCE = "div.PostingTimeAndPlace-module_date-location__1Owcv span.caption.small.city"
 SELECTOR_PRICE = "div.index-module_price-group__B9-pV p.index-module_price__N7M2x"
-MIN_PRICE = 0.00
+
 app = FastAPI()
 
 # Configure logging to display messages at the INFO level
@@ -51,9 +50,10 @@ def scrape():
         dict: A response message and the list of cleaned products if successful,
               or an error message if scraping or saving fails.
     """
+    driver = None
     try:
         logger.info("selenium driver start..")
-        # Initialize the Selenium WebDriver and navigate to the target URL
+        # Initialize the Selenium WebDriver
         driver = setup()
 
         # Get the title of the current webpage
@@ -61,6 +61,8 @@ def scrape():
 
         # Set an implicit wait time of 5 seconds for finding elements
         driver.implicitly_wait(5)
+
+        print(driver.page_source)
 
         # find all elements matching the css selector (changed to take the DIV father element)
         products = driver.find_elements(By.CSS_SELECTOR, SELECTOR_PRODUCTS)
@@ -80,11 +82,10 @@ def scrape():
                 url = product.get_attribute("href")
 
                 product_data = {
-                    "title": title.strip(),
-                    "city": city.strip(),
-                    "province": province.strip(),
-                    "price": price.strip(),
-                    "shipping_available": False,
+                    "title": title,
+                    "city": city,
+                    "province": province,
+                    "price": price,
                     "date_scraped": None,
                     "url": url
                 }
@@ -101,6 +102,7 @@ def scrape():
         # Log a message indicating the scraping process was completed successfully
         logger.info(f"Scraping completed succesfully: {raw_data}")
 
+        
         return saving_data(raw_data)
 
     except Exception as e:
@@ -122,8 +124,10 @@ def setup():
         Exception: If there is an error during WebDriver setup.
     """
     try:
-        # Initialize the Selenium WebDriver (Chrome) and navigate to the target URL
-        driver = webdriver.Chrome()
+
+        options = get_custom_chrome_options()
+        # Inizializing the webdriver with custom options
+        driver = webdriver.Chrome(options=options)
         driver.get(SCRAPE_URL)
         return driver  # Return the WebDriver instance
     except Exception as e:
@@ -149,74 +153,70 @@ def teardown(driver):
 
 def saving_data(raw_data):
     """
-    Pulisce i dati grezzi, applica i filtri, aggiorna/inserisce i prodotti in MongoDB
-    e restituisce una lista dei prodotti puliti.
-    
+    Adds the current datetime to each product in the raw data and saves them to MongoDB.
+    Data is stored as scraped, with only the date_scraped field added.
+    No filtering or cleaning on the products, we are saving raw data as scraped(immutability of data)
+    Filtering and cleaning will be done in another microservice(separation of concern)
+
     Args:
-        raw_data (list): Lista di dizionari con i dati grezzi dei prodotti.
-    
+        raw_data (list): List of dictionaries containing the raw product data.
+
     Returns:
-        dict: Messaggio di successo e lista dei prodotti puliti.
+        dict: Success message and the list of products saved to MongoDB,
+              or an error message if saving fails.
     """
     try:
-        cleaned_data = []
+        data = []
         ### delete all elements in the collections
-        collection.delete_many({})
+        # collection.delete_many({})
         for product in raw_data:
             filter_query = {"title": product["title"]}  # This finds a document with the same title
             update_statement = {"$set": product}       # This sets all fields to the new data
             ###title
-            product['title'] = product['title'].lower()
-            #filer product that does not contain product_name in product_title
-            if not(PRODUCT_NAME in product['title']):
-                logger.info(f"Skipping product: '{PRODUCT_NAME}' not found in title '{product['title']}'")
-                continue
-            #looping on a list of unwanted names, if one name is found in the product_title skip the product
-            skip_product = False
-            for unwanted_product in UNWANTED_LIST:
-                if (unwanted_product in product['title']):
-                    logger.info(f"Skipping product: '{unwanted_product}' found in title '{product['title']}'")
-                    skip_product = True
-            if(skip_product == True):
-                continue
+            # product['title'] = product['title']
             ###price
-            product['price'] = product['price'].lower()
-            #skipping(removing) sold item
-            if ("venduto" in product['price']):
-                logger.info(f"Skipping '{product['title']}', already sold.")
-                continue
-            #check 'shipping_available' boolean
-            if ("spedizione disponibile" in product['price']):
-                logger.info(f"Setting shipping_available to true")
-                product['shipping_available'] = True
-            try:
-                if (product['price'] == ''):
-                    logger.info(f"Skipping '{product['title']}', the price is not defined.")
-                    continue
-                #removing the $Spedizone disponibile, taking only the numeric part converted to int
-                product['price'] = float(product['price'].split()[0])
-                #removing low price for spam product accessory broken phone ecc
-                if (product['price'] <= MIN_PRICE):
-                    logger.info(f"Skipping '{product['title']}', price '{product['price']}' is too low.")
-                    continue
-            except Exception as e:
-                logger.error(f"Price conversion error: {e}")
-                continue
-            
-            ###province
-            #regex to remove both parenthesis
-            product['province'] = re.sub(r"[()]", "", product['province'])
+            # product['price'] = product['price']
+
+            # product['province'] = product['province']
             ###city
-            product['city'] = product['city'].lower()
+            # product['city'] = product['city']
             ###date
             product['date_scraped'] = datetime.now()
 
             collection.update_one(filter_query, update_statement, upsert=True)
-            cleaned_data.append(product)
+            data.append(product)
 
         ## returning a fresh list tha has not been modified by mongodb update_one or insert_many (does not containt objectId created by mongodb) avoid serialization errors 
-        return {"message": "Scrape success and data saved.", "result" : cleaned_data}
+        return {"message": "Scrape success and data saved to mongodb.", "result" : data}
     
     except Exception as e:
         logger.error(f"Error saving data to mongodb: {e}")
         return {f"message": "error saving data to mongodb", "error" : str(e)}
+    
+
+def get_custom_chrome_options():
+    """
+        Creates and configures a ChromeOptions object for Selenium WebDriver to reduce bot dedection.
+
+        The options are set to:
+        - Enable headless mode (not opening a browser window).
+        - Specify a standard desktop window size to mimic a real user and avoid mobile layouts.
+        - Use a real browser user-agent to reduce bot detection.
+
+        Additional options for Docker or CI environments are included as comments for future use if needed:
+        - --no-sandbox: Disables Chrome security sandbox. Needed in Docker/CI environments where the sandbox can cause permission errors.
+        - --disable-dev-shm-usage: Tells Chrome not to use /dev/shm (shared memory). In Docker, the default shared memory size can be too small, causing Chrome to crash.
+        - --disable-blink-features=AutomationControlled: Tries to hide the fact that you’re using Selenium. Some sites check for this feature to block bots.
+
+        Returns:
+            webdriver.ChromeOptions: A configured ChromeOptions object for use with Selenium.
+    """
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless=new")
+    ### This options may be needed when running in a docker environment ###
+    # options.add_argument("--no-sandbox")
+    # options.add_argument("--disable-dev-shm-usage")
+    # options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("window-size=1920,1080")
+    options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    return options
