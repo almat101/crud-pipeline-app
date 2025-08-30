@@ -1,10 +1,8 @@
-fastapi[standard]
-uvicorn[standard]
-python-multipart
-pydantic
-selenium
-webdriver-manager
-beautifulsoup4
-pymongo
+fastapi[standard] # Framework moderno, veloce e performante per creare API web asincrone in python
+uvicorn[standard] # server ASGI leggero e performante usato per eseguire app fastApi
+python-multipart # serve per gestire upload di file(multipart/form-data) nelle API FastAPI
+selenium # libreria per automazione del browser (scraping,test automatici, ecc)
+webdriver-manager # Gestisce automaticamente il download e l’aggiornamento dei driver per Selenium (ChromeDriver ecc), cosi non devi scaricarli manualmente
+pymongo #driver ufficiale di Python per connettersi a mongoDB
 
 

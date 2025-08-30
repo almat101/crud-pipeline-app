@@ -10,11 +10,10 @@ from pymongo import MongoClient
 import re
 from datetime import datetime
 
-#### MONGO DB connection creation ####
-client = MongoClient("mongodb://localhost:27017/")
-db = client["products_db"]
-collection = db["raw_products"]
-
+# MongoDB connection
+MONGO_URI = "mongodb://localhost:27017/"
+MONGO_DB = "products_db"
+MONGO_COLLECTION = "raw_products"
 
 # SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
 # PRODUCT_NAME="thinkpad t14"
@@ -165,34 +164,33 @@ def saving_data(raw_data):
         dict: Success message and the list of products saved to MongoDB,
               or an error message if saving fails.
     """
+
+    #### MONGO DB connection creation ####
+    client = None
     try:
+        client = MongoClient(MONGO_URI)
+        db = client[MONGO_DB]
+        collection = db[MONGO_COLLECTION]
+
         data = []
         ### delete all elements in the collections
         # collection.delete_many({})
         for product in raw_data:
             filter_query = {"title": product["title"]}  # This finds a document with the same title
             update_statement = {"$set": product}       # This sets all fields to the new data
-            ###title
-            # product['title'] = product['title']
-            ###price
-            # product['price'] = product['price']
-
-            # product['province'] = product['province']
-            ###city
-            # product['city'] = product['city']
             ###date
             product['date_scraped'] = datetime.now()
 
             collection.update_one(filter_query, update_statement, upsert=True)
             data.append(product)
-
-        ## returning a fresh list tha has not been modified by mongodb update_one or insert_many (does not containt objectId created by mongodb) avoid serialization errors 
+        ## returning a fresh list that has not been modified by mongodb update_one or insert_many (does not containt objectId created by mongodb) avoid serialization errors 
         return {"message": "Scrape success and data saved to mongodb.", "result" : data}
-    
     except Exception as e:
         logger.error(f"Error saving data to mongodb: {e}")
         return {f"message": "error saving data to mongodb", "error" : str(e)}
-    
+    finally:
+        if client:
+            client.close()
 
 def get_custom_chrome_options():
     """

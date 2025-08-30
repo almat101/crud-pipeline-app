@@ -1,0 +1,8 @@
+pandas # libreria per l'analisi e manipolazione di dati, usata per lavorare con tabelle(Dataframe)
+numpy # libreria calcolo numerico e gestione array/matrici spesso usata con PANDAS
+pymongo # per leggere da MongoDB  
+sqlalchemy # ORM per python
+psycopg2-binary # per scrivere su PostgreSQL  
+python-dotenv #libreria per caricare le variabili
+# fastapi[standard] # Framework moderno, veloce e performante per creare API web asincrone in python
+# uvicorn[standard] # server ASGI leggero e performante usato per eseguire app fastapi
