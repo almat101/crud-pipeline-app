@@ -11,7 +11,9 @@ import re
 from datetime import datetime
 
 # MongoDB connection
-MONGO_URI = "mongodb://localhost:27017/"
+# MONGO_URI = "mongodb://localhost:27017/" # local development
+MONGO_URI = "mongodb://mongodb:27017/" # docker
+
 MONGO_DB = "products_db"
 MONGO_COLLECTION = "raw_products"
 
@@ -36,7 +38,7 @@ logger = logging.getLogger(__name__)  # Create a logger instance for this module
 @app.get("/")
 def read_root():
     logger.info("Root endpoint called")
-    return {"Hello": "World"}
+    return {"message": "Hello from scraper-service!"}
 
 
 @app.get("/scrape")
@@ -61,7 +63,7 @@ def scrape():
         # Set an implicit wait time of 5 seconds for finding elements
         driver.implicitly_wait(5)
 
-        print(driver.page_source)
+        # print(driver.page_source)
 
         # find all elements matching the css selector (changed to take the DIV father element)
         products = driver.find_elements(By.CSS_SELECTOR, SELECTOR_PRODUCTS)
@@ -171,7 +173,7 @@ def saving_data(raw_data):
         client = MongoClient(MONGO_URI)
         db = client[MONGO_DB]
         collection = db[MONGO_COLLECTION]
-
+        logger.info(f"date is {datetime.now()}")
         data = []
         ### delete all elements in the collections
         # collection.delete_many({})
@@ -212,9 +214,9 @@ def get_custom_chrome_options():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
     ### This options may be needed when running in a docker environment ###
-    # options.add_argument("--no-sandbox")
-    # options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("window-size=1920,1080")
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
     return options

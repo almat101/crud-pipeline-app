@@ -45,6 +45,33 @@ services:
     networks:
       - test
 
+  scraper-service:
+    build: ./backend/scraper-service
+    container_name: scraper-service
+    env_file: ".env"
+    ports:
+      - 3040:3040
+    restart: unless-stopped
+    # depends_on:
+    #   db_auth:
+    #     condition: service_healthy
+    networks:
+      - test
+
+
+  trasformer-service:
+    build: ./backend/trasformer-service
+    container_name: trasformer-service
+    env_file: ".env"
+    ports:
+      - 3050:3050
+    restart: unless-stopped
+    # depends_on:
+    #   db_auth:
+    #     condition: service_healthy
+    networks:
+      - test
+
   mongodb:
     image: mongo
     container_name: mongodb
@@ -52,6 +79,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - test
 
   db_auth:
     image: postgres:17-alpine3.22

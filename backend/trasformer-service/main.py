@@ -9,6 +9,14 @@ from sqlalchemy import text
 from dotenv import load_dotenv
 import os
 
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def hello():
+    return {"message": "Hello from trasformer-service!"}
+
 
 #TODO remove it when I launch from docker-compose
 load_dotenv()
@@ -24,7 +32,7 @@ PRDODUCT_MIN_PRICE = 200.00
 
 #### MONGO DB constant ####
 #aggiunta timeout all URI per evitare che il programma resti in attessa infinita aspettando la connessione
-MONGO_URI = "mongodb://localhost:27017/?timeoutMS=10000"
+MONGO_URI = "mongodb://mongodb:27017/?timeoutMS=10000"
 MONGO_DB = "products_db"
 MONGO_COLLECTION = "raw_products"
 
@@ -179,7 +187,8 @@ def writing_dataframe_to_pg(df):
         logger.error(f"PostgreSQL writing error: {e}")
     # print(df)
 
-if __name__ == "__main__":
+@app.post("/trasform")
+def exec_trasform():
     try:
         # Entry point of the transformer-service script
         logger.info("Starting trasformer-service...")
@@ -194,7 +203,17 @@ if __name__ == "__main__":
             check_connection_to_pg()
             # 4. write cleaned data to PostgresSQL
             writing_dataframe_to_pg(df)
+            # 5. Convert to json and return
+            # obj = df.to_json()
+            obj = df.to_dict('records')
             logger.info("Finished job trasformer-service.")
+            return {"Status": "success, trasformation and loading completed.", "data cleaned" : obj}
+        else:
+            return {"status": "no_data", "message": "No data found in MongoDB."}
             # print(df)
     except Exception as e:
         logger.error(f"Main program error: {e}")
+        return {"status": "error", "message": str(e)}
+
+if __name__ == "__main__":
+    exec_trasform()

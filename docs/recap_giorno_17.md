@@ -45,9 +45,6 @@ Progettare e iniziare l’implementazione del microservizio `transformer-service
 ### 8. **Gestione errori di connessione a MongoDB e PostgreSQL**
 - [x] Il programma gestisce correttamente errori se uno o entrambi i container sono spenti e quindi non raggiungibili.
 
-### 9. **Automazione e scheduling**
-- [ ] (Opzionale) Prepara uno script o una funzione schedulabile per eseguire periodicamente la trasformazione.
-
 ---
 
 ## Note aggiuntive

@@ -5,4 +5,3 @@ selenium # libreria per automazione del browser (scraping,test automatici, ecc)
 webdriver-manager # Gestisce automaticamente il download e l’aggiornamento dei driver per Selenium (ChromeDriver ecc), cosi non devi scaricarli manualmente
 pymongo #driver ufficiale di Python per connettersi a mongoDB
 
-
