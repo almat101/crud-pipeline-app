@@ -1,0 +1,3 @@
+fastapi[standard] # Framework moderno, veloce e performante per creare API web asincrone in python
+uvicorn[standard] # server ASGI leggero e performante usato per eseguire app fastApi
+requests # Simple and popular HTTP library for making API calls and handling web requests

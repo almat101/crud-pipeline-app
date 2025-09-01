@@ -59,15 +59,29 @@ services:
       - test
 
 
-  trasformer-service:
-    build: ./backend/trasformer-service
-    container_name: trasformer-service
+  transformer-service:
+    build: ./backend/transformer-service
+    container_name: transformer-service
     env_file: ".env"
     ports:
       - 3050:3050
     restart: unless-stopped
     # depends_on:
     #   db_auth:
+    #     condition: service_healthy
+    networks:
+      - test
+
+
+  orchestrator-service:
+    build: ./backend/orchestrator-service
+    container_name: orchestrator-service
+    env_file: ".env"
+    ports:
+      - 3060:3060
+    restart: unless-stopped
+    # depends_on:
+    #   db_products:
     #     condition: service_healthy
     networks:
       - test

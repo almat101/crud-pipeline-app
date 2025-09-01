@@ -187,7 +187,7 @@ def writing_dataframe_to_pg(df):
         logger.error(f"PostgreSQL writing error: {e}")
     # print(df)
 
-@app.post("/trasform")
+@app.post("/transform")
 def exec_trasform():
     try:
         # Entry point of the transformer-service script
