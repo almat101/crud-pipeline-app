@@ -29,6 +29,12 @@ services:
     depends_on:
       db_auth:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3030/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -42,6 +48,12 @@ services:
     depends_on:
       db_auth:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3020/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -52,9 +64,15 @@ services:
     ports:
       - 3040:3040
     restart: unless-stopped
-    # depends_on:
-    #   db_auth:
-    #     condition: service_healthy
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3040/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -66,9 +84,17 @@ services:
     ports:
       - 3050:3050
     restart: unless-stopped
-    # depends_on:
-    #   db_auth:
-    #     condition: service_healthy
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      db_products:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -80,9 +106,17 @@ services:
     ports:
       - 3060:3060
     restart: unless-stopped
-    # depends_on:
-    #   db_products:
-    #     condition: service_healthy
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      db_products:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3060/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -93,6 +127,12 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ ping: 1 }).ok' --quiet | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - test
 
@@ -133,6 +173,12 @@ services:
     volumes:
       - postgres_products_data:/var/lib/postgresql/data
       - ./backend/products-service/init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s 
     networks:
       - test
 

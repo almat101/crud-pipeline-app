@@ -31,6 +31,10 @@ app.use(express.json());
 // Collego il router di autenticazione aggiungo /auth in modo da dover chiamare solo /auth/signup e auth/login
 app.use('/auth', authRoutes);
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.listen(PORT, () => {
   console.log(`Auth app listening on port ${PORT}`)
       console.log(`

@@ -34,6 +34,9 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)  # Create a logger instance for this module
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 @app.get("/")
 def read_root():

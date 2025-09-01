@@ -9,6 +9,10 @@ logger = logging.getLogger(__name__)  # Create a logger instance for this module
 
 app = FastAPI()
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/")
 def hello():
     return {"message":"hello from orchestrator-service!"}

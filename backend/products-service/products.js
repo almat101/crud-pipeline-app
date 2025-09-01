@@ -68,6 +68,11 @@ app.use(helmet());
 // serve per parsare il corpo(body) delle richieste in entrata quando sono in formato JSON
 app.use(express.json());
 
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Nuove rotte per testare le operazione CRUD
 
 // GET per recuperare tutti i prodotti (READ) 
