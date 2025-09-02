@@ -15,9 +15,7 @@ const BSNavbar = () => {
           logout();
           // delete id from local storage
           deleteId();
-          setTimeout(() => {
-                navigate('/login');
-          }, 500);
+          navigate('/login', { replace: true });
         } catch (error) {
           console.error('Logout failed:', error);
         }
@@ -34,6 +32,7 @@ const BSNavbar = () => {
             {!isAuth && <Nav.Link href="/login">Login</Nav.Link>}
             {!isAuth && <Nav.Link href="/signup">Signup</Nav.Link>}
             {isAuth && <Nav.Link href="/products">Products</Nav.Link>}
+            {isAuth && <Nav.Link href="/scraped">Scraped products</Nav.Link>}
           </Nav>
           <Nav className="ms-auto">
               {isAuth && (

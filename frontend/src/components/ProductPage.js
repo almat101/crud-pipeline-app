@@ -12,13 +12,10 @@ const URL = isDev ? 'http://localhost:3020/api/products' :  '/api/products';
 //invocazione dell interceptor che aggiunge il token bearer ad ogni richiesta
 Interceptor();
 
-// Retrive the token from local storage
 const ProductPage = () => {
           
     const [products, setProducts] = useState([]); // List of all products
-    const [product] = useState(null); // Single product by ID
     const [addFormData, setAddFormData] = useState({ name: '', price: '', category: '', user_id: '' }); // For POST
-    const [delProductId, setDeleteProductId] = useState(''); // ID for DELETE
     const [message, setMessage] = useState(''); // Success/Error messages
     const [selectedProductId, setSelectedProductId] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);

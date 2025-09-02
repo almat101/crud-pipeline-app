@@ -10,7 +10,7 @@ Automatizzare ulteriormente l’esecuzione della pipeline dati, rendendo il proc
       - All’avvio del container, il servizio cron effettuerà una chiamata HTTP all’endpoint `/orchestrate` dell’orchestrator-service per avviare la pipeline.
       - La chiamata verrà effettuata alla partenza del cron-service e poi ripetuta automaticamente ogni ora, garantendo l’esecuzione periodica e regolare della pipeline dati.
 
-- [ ] **Visualizzazione prodotti scraped su React**
+- [x] **Visualizzazione prodotti scraped su React**
       - Implementare la visualizzazione dei prodotti inseriti in PostgreSQL nella tabella `scraped_products` anche nell’interfaccia React.
       - Attualmente, su React visualizzo solo i prodotti su cui posso effettuare operazioni CRUD; sarà necessario aggiungere una sezione o una vista dedicata ai prodotti provenienti dalla pipeline di scraping e trasformazione.
 

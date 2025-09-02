@@ -47,9 +47,10 @@ const { login, saveId } = useContext(AuthContext);
             login(token);
             setVariant('success');
             //piccolo delay per navigare a /products 
-            setTimeout(() => {
-              navigate('/products');
-            }, 500);
+            // setTimeout(() => {
+            //   navigate('/products');
+            // }, 500);
+            navigate('/products', { replace: true });
 
         } catch (error) {
             setMessage(error.response?.data?.message || 'Signup failed!'); // Mostra un messaggio di errore

@@ -91,6 +91,18 @@ app.get('/api/products', JWT_middleware_decode, async (req,res) =>
     }
 });
 
+//get per recuperare tutti i prodotti scraped da selenium
+app.get('/api/scraped_products', JWT_middleware_decode, async (req,res) =>
+{
+    try {
+        const result = await pool.query(`SELECT * from scraped_products`);
+        res.status(200).json(result.rows);
+    } catch(err) {
+            res.status(500).json({ message: 'Errore interno del server. Riprova più tardi.' });
+    }
+});
+
+
 //GET per recuperare un prodotto specifico (READ)
 // aggiunta middleware JWT
 app.get('/api/products/:id',JWT_middleware_decode, async (req,res) =>
