@@ -189,10 +189,10 @@ def saving_data(raw_data):
             collection.update_one(filter_query, update_statement, upsert=True)
             data.append(product)
         ## returning a fresh list that has not been modified by mongodb update_one or insert_many (does not containt objectId created by mongodb) avoid serialization errors 
-        return {"message": "Scrape success and data saved to mongodb.", "result" : data}
+        return {"status" : "success", "message": f"Scraped {len(data)} products and saved to mongodb", "result" : data}
     except Exception as e:
         logger.error(f"Error saving data to mongodb: {e}")
-        return {f"message": "error saving data to mongodb", "error" : str(e)}
+        return {"status" : "error", "message": "error saving data to mongodb", "error" : str(e)}
     finally:
         if client:
             client.close()

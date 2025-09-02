@@ -1,0 +1,2 @@
+@reboot root /cron.sh
+0 * * * * root /cron.sh

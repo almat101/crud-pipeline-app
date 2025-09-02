@@ -208,12 +208,12 @@ def exec_trasform():
             # 4. write cleaned data to PostgresSQL
             writing_dataframe_to_pg(df)
             # 5. Convert to json and return
-            # obj = df.to_json()
-            obj = df.to_dict('records')
+            # data = df.to_json()
+            data = df.to_dict('records')
             logger.info("Finished job trasformer-service.")
-            return {"Status": "success, trasformation and loading completed.", "data cleaned" : obj}
+            return {"status": "success", "message": f"transformed and saved {len(data)} products to postgreSQL", "data_cleaned" : data}
         else:
-            return {"status": "no_data", "message": "No data found in MongoDB."}
+            return {"status": "no data", "message": "No data found in MongoDB."}
             # print(df)
     except Exception as e:
         logger.error(f"Main program error: {e}")

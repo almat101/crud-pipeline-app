@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import requests
 import logging
+import datetime
 
 # Configure logging to display messages at the INFO level
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +50,17 @@ def orchestrate():
         return {"Error:" "tranform-service failed for":  str(e)}
     
     return {
-        "scraper-service respnse" : scrape_response.json(),
-        "transformer-service response" : transform_response.json()
+        "status": "success",
+        "message": "Pipeline orchestration completed successfully",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "services": {
+            "scraper": {
+                "status": "success",
+                "message": scrape_response.json().get("message", "Scraping completed")
+            },
+            "transformer": {
+                "status": "success", 
+                "message": transform_response.json().get("message", "Transformation completed")
+            }
+        }
     }

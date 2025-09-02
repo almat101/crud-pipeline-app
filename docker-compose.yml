@@ -182,6 +182,20 @@ services:
     networks:
       - test
 
+  cron-service:
+    build: ./cron-service
+    container_name: cron-service
+    depends_on:
+      scraper-service:
+        condition: service_healthy
+      transformer-service:
+        condition: service_healthy
+      orchestrator-service:
+        condition: service_healthy
+    networks:
+      - test
+
+
 volumes:
   postgres_auth_data:
   postgres_products_data:
