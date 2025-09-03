@@ -9,17 +9,17 @@ from selenium.webdriver.chrome.options import Options
 from pymongo import MongoClient
 import re
 from datetime import datetime
+import os
+
 
 # MongoDB connection
 # MONGO_URI = "mongodb://localhost:27017/" # local development
-MONGO_URI = "mongodb://mongodb:27017/" # docker
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
-MONGO_DB = "products_db"
-MONGO_COLLECTION = "raw_products"
-
-# SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=thinkpad+t14"
-# PRODUCT_NAME="thinkpad t14"
-SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
+SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/informatica/?q=thinkpad+t14&shp=true"
+# SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
 
 SELECTOR_PRODUCTS = "a.SmallCard-module_link__hOkzY"
 # SELECTOR_PRODUCTS = "div.SmallCard-module_upper-data-group__aRFDu"

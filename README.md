@@ -1,101 +1,151 @@
-# express_project_1
-Some test with express framework
+## Full-Stack Data-Driven Pipeline Application
 
-Express.js è un framework web minimale e flessibile per Node.js che fornisce un set robusto di funzionalità per costruire applicazioni web e API REST.
+This project started as a simple CRUD application and evolved into a modular system with an integrated data pipeline for scraping, processing, and visualizing e-commerce product data. The system automates data extraction, transformation, and loading (ELTL) processes while maintaining a user-friendly interface for managing and viewing products.
 
-Perché usarlo?
+## Project Overview
 
-- Semplifica lo Sviluppo Web: Node.js da solo offre API a basso livello per creare server HTTP. Express.js si basa su queste API e le semplifica enormemente, fornendo strumenti e convenzioni per gestire routing, middleware, richieste e risposte in modo molto più efficiente e organizzato.
+This project combines a traditional CRUD application with a data-driven pipeline. It scrapes product data from e-commerce sites, processes it, and makes it available for visualization through a React frontend. The architecture is modular, with separate services for scraping, transforming, and orchestrating the pipeline.
 
-- Veloce e Minimale: È "unopinionated", il che significa che non impone una struttura rigida o molte dipendenze. Questo ti dà la libertà di scegliere le librerie e gli strumenti che preferisci, mantenendo il tuo backend leggero e veloce.
+## Architecture
 
-- Gestione del Routing: Rende estremamente facile definire come il tuo server risponde a diverse richieste HTTP (GET, POST, PUT, DELETE) su vari URL (route).
-
-- Middleware: Offre un potente sistema di middleware, che sono funzioni che possono eseguire compiti specifici (come il parsing del corpo delle richieste, l'autenticazione, il logging) prima che le richieste raggiungano la logica finale della tua applicazione.
-
-- Grande Community ed Ecosistema: Essendo il framework più popolare per Node.js, ha una vasta community, tonnellate di risorse, tutorial e un enorme ecosistema di librerie e middleware di terze parti che possono estendere le sue funzionalità.
-
-- Scalabilità: È progettato per essere scalabile e può gestire un gran numero di richieste simultanee, rendendolo adatto per applicazioni ad alto traffico.
-
-In sintesi, Express.js è lo strumento che ti permette di passare dalla semplice creazione di un server HTTP con Node.js alla costruzione di API REST complesse e applicazioni web complete in modo strutturato ed efficiente.
+The project is built with a modular architecture, with each component serving a specific purpose:
 
 
-Per creare un app express dalla documentazione ufficiale:
+```
+├── backend/
+│   ├── auth-service/         # Authentication and user management
+│   ├── products-service/     # CRUD operations for products
+│   ├── scraper-service/      # Extracts raw data from e-commerce sites
+│   ├── transformer-service/  # Cleans and transforms raw data
+│   └── orchestrator-service/ # Coordinates the data pipeline
+├── frontend/                 # React application for user interface
+└── cron-service/             # Handles automated pipeline execution
+```
 
-import express from 'express'
+## Key Features
 
-const app = express()
-const port = 3000
+### Core CRUD Application
 
-app.get('/', (req, res) => {
-  console.log(req);
-  res.send('Hello World!')
-})
+**User Authentication:**
+- Secure signup and login functionality with JWT tokens
+- Password hashing with bcrypt
+- Token-based authentication for protected routes
+- User validation with Joi
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-  console.log(`Route available '/' e '/about'`)
-})
+**Product Management:**
+- Create, read, update, and delete product entries
+- PostgreSQL database for persistent storage
+- Integrated with pg (node-postgres) for seamless database interaction
 
-possiamo aggiungere la creazione di un enpoint semplicemente cosi:
+**RESTful API:**
+- Clean API structure following REST principles
+- Proper HTTP method usage (GET, POST, PUT, PATCH, DELETE)
 
-app.get('/about',(req,res)=>
-{
-  res.json({message : "success", test : "lol"})
-})
+### Data Pipeline
 
+**ELTL Architecture:**
+- **Extract & Load (1):** A single microservice combines the extraction of product data (using Selenium) and the loading of raw data into MongoDB. This approach simplifies the architecture by reducing the number of microservices while maintaining functionality.
+- **Transform & Load (2):** Another microservice handles both the transformation of data (using Pandas for cleaning and standardization) and the loading of processed data into PostgreSQL for application use.
 
-Cosa fa res.json():
+**Automation:**
+- Cron job configured to run the pipeline hourly
+- Pipeline orchestration through a dedicated microservice
 
-- Prende il valore JavaScript che gli hai passato.
-- Lo converte in una stringa JSON (internamente usa JSON.stringify()).
-- Imposta automaticamente l'header Content-Type della risposta HTTP a application/json.
-- Invia la risposta al client.
+**Data Processing:**
+- Price normalization and extraction
+- Location data standardization (city, province)
+- Text cleaning and filtering based on exact product name
 
-in 3 righe abbiamo creato un endpoint che ritorna un oggetto JSON e imposta anche application/json nell header!
+### DevOps Features
 
-## BASIC ROUTING
-Routing refers to determining how an application responds to a client request to a particular endpoint, which is a URI (or path) and a specific HTTP request method (GET, POST, and so on).
+**Containerization:**
+- Docker containers for each microservice
+- Docker Compose for service orchestration
+- Environment variable management
 
-Each route can have one or more handler functions, which are executed when the route is matched.
+**Health Monitoring:**
+- Health check endpoints for each service
+- Dependency management between services
 
-Route definition takes the following structure:
+## Technologies Used
 
-app.METHOD(PATH, HANDLER)
-Where:
+### Backend
+- **Node.js & Express:** Core server framework for auth and products services
+- **FastAPI (Python):** Powers the data pipeline services
+- **PostgreSQL:** Stores processed product data and user information
+- **MongoDB:** Stores raw scraped data
+- **JWT:** Authentication tokens
+- **bcrypt:** Password hashing
+- **Joi:** Request validation
 
-app is an instance of express.
-METHOD is an HTTP request method, in lowercase.
-il metodo http get,post ecc
-PATH is a path on the server.
-il path e la rotta es '/'
-HANDLER is the function executed when the route is matched.
-l'handler e' una callback
-es:
-app.get('/',(req,res) =>
-{
-    res.send("lol");
-})
+### Data Pipeline
+- **Selenium:** Web scraping and browser automation
+- **Pandas & NumPy:** Data transformation and cleaning
+- **SQLAlchemy:** Database ORM for Python services
+- **pymongo:** MongoDB interactions from Python
 
-## MIDDLEWARE
+### Frontend
+- **React:** UI framework
+- **React Bootstrap:** UI components
+- **Axios:** HTTP client with interceptors for JWT handling
+- **React Router:** Navigation and routing
 
-Immagina i middleware come una catena di montaggio per le richieste HTTP.
-Ogni richiesta che arriva al tuo server passa attraverso una serie di "stazioni" (i middleware) prima di arrivare al "prodotto finale" (la risposta inviata al client).
+### DevOps
+- **Docker & Docker Compose:** Containerization and orchestration
+- **Cron:** Scheduled task execution
+- **Nginx:** Reverse proxy (for production)
 
-Cos'è un Middleware?
+## Project Evolution
 
-È una funzione (o un insieme di funzioni) che ha accesso all'oggetto della richiesta (req), all'oggetto della risposta (res) e alla funzione middleware successiva nel ciclo richiesta-risposta (next).
+This project evolved over 20 days, with each day focusing on specific enhancements:
 
-Si posiziona tra la richiesta in arrivo del client e il gestore della rotta (il tuo app.get('/api/data', ...), app.post('/submit', ...), ecc.).
+- **Days 1-3:** Setting up Node.js, Express, and understanding asynchronous programming
+- **Days 4-5:** Implementing CRUD operations with PostgreSQL
+- **Days 6-7:** Building the authentication service and frontend setup
+- **Days 8-10:** Frontend development, JWT token handling, and UI improvements
+- **Days 11-13:** Building the scraper service with Selenium and FastAPI
+- **Days 14-15:** MongoDB integration and raw data storage
+- **Days 16-17:** Implementing the transformer service with data cleaning
+- **Days 18-19:** Containerization and orchestration of the pipeline
+- **Day 20:** Automation with cron jobs and final integrations
 
-A Cosa Servono? (Casi d'Uso Tipici)
+## Getting Started
 
-I middleware sono perfetti per operazioni che devono essere eseguite su ogni richiesta (o su un sottoinsieme di richieste) e che non fanno parte della logica di business specifica di una singola rotta.
-- Logging: Registrare informazioni sulle richieste (data, IP, URL, metodo, tempo di risposta).
-- Autenticazione/Autorizzazione: Verificare se un utente è loggato e se ha i permessi per accedere a una risorsa.
-- Parsing del Body: Decodificare il corpo delle richieste POST/PUT/PATCH (JSON, URL-encoded). (Es: express.json(), express.urlencoded()).
-- Gestione degli Errori: Catturare errori e inviare risposte uniformi al client.
-- Compressione: Comprimere le risposte per ridurre il tempo di caricamento (compression middleware).
-- CORS: Gestire le richieste Cross-Origin Resource Sharing.
-- Sessioni: Gestire le sessioni utente.
-- Protezione CSRF: Protezione contro attacchi Cross-Site Request Forgery.
+### Prerequisites
+- Docker and Docker Compose
+- Python 3.11+ (for managing virtual environments, if needed in local development)
+
+### Running with Docker Compose
+
+```bash
+# Clone the repository
+git clone <repository-url>
+
+# Navigate to the project directory
+cd express_project_1
+
+# Rename the .env.example file to .env
+mv .env.example .env
+
+# Start all services
+docker-compose up -d
+
+# For development with hot-reload
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+### Accessing the Application
+- **Frontend:** [http://localhost:80](http://localhost:80)
+- **Products API:** [http://localhost:3020/api/products](http://localhost:3020/api/products)
+- **Auth API:** [http://localhost:3030/api/auth](http://localhost:3030/api/auth)
+- **Scraper API:** [http://localhost:3040/scrape](http://localhost:3040/scrape) (scrape the products and save to mongoDB)
+- **Transformer API:** [http://localhost:3050/transform](http://localhost:3050/transform) (clean the products and save to postgreSQL)
+- **Orchestrator API:** [http://localhost:3060/orchestrate](http://localhost:3060/orchestrate) (triggers the pipeline)
+
+## Further Documentation
+
+For detailed information about the implementation and evolution of each component, refer to the `docs` directory, which contains day-by-day recaps (`recap_giorno_X.md`) documenting the development process from a simple Express application to a full-featured data pipeline.
+
+## License
+
+This project is licensed under the terms of the license included in the repository.

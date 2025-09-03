@@ -47,7 +47,7 @@ const ScrapedPage = () => {
                                 {product.price_not_specified ? "Price not specified" : `$${product.price}`}
                             </Card.Subtitle>
                             <Card.Text>
-                                <strong>Location:</strong> {product.city}, {product.province}
+                                <strong>Location:</strong> {product.city}({product.province})
                             </Card.Text>
                             <Card.Text>
                                 <strong>Date Scraped:</strong> {new Date(product.date_scraped).toLocaleDateString()}

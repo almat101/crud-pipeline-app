@@ -23,7 +23,7 @@ def hello():
 
 
 #TODO remove it when I launch from docker-compose
-load_dotenv()
+# load_dotenv()
 
 POSTGRES_USER_PRODUCTS = os.getenv("POSTGRES_USER_PRODUCTS")
 POSTGRES_PASSWORD_PRODUCTS = os.getenv("POSTGRES_PASSWORD_PRODUCTS")
@@ -31,14 +31,16 @@ POSTGRES_HOST_PRODUCTS = os.getenv("POSTGRES_HOST_PRODUCTS")
 POSTGRES_PORT_PRODUCTS = os.getenv("POSTGRES_PORT_PRODUCTS")
 POSTGRES_DB_PRODUCTS = os.getenv("POSTGRES_DB_PRODUCTS")
 
-PRODUCT_NAME_FILTERED = "iphone 15"
+PRODUCT_NAME_FILTERED = "thinkpad t14"
+# PRODUCT_NAME_FILTERED = "iphone 15"
+
 PRDODUCT_MIN_PRICE = 200.00
 
 #### MONGO DB constant ####
 #aggiunta timeout all URI per evitare che il programma resti in attessa infinita aspettando la connessione
-MONGO_URI = "mongodb://mongodb:27017/?timeoutMS=10000"
-MONGO_DB = "products_db"
-MONGO_COLLECTION = "raw_products"
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
 # Configure logging to display messages at the INFO level
 logging.basicConfig(level=logging.INFO)
