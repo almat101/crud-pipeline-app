@@ -138,6 +138,9 @@ def clean_data(df):
         # df['shipping_available'] = False
         # questa linea di codice crea una nuova colonna e restituisce una nuova Series di booleani, quindi inserisce automaticamente i valori true e false se price contiene "Spedizione disponibile"
         df['shipping_available'] = df['price'].str.contains('Spedizione disponibile')
+        
+        # maschera che filtra i dati in base alla parola venduto se la contengono vengono presi, ma a noi serve che non la contengono quindi viene usata la negazione con la ~ 
+        df = df[~df['price'].str.contains('Venduto')].copy()
 
         #esecuzione di un espressione regolare che filtra solo i numeri e dopo casta le stringhe che contengono numeri in valori numerici e le stringhe di testo in NaN automaticamente.
         df['price'] = df['price'].str.replace(r'\D', '', regex=True)
