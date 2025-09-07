@@ -9,7 +9,15 @@ services:
     restart: unless-stopped
     depends_on:
       auth-service:
-        condition: service_started
+        condition: service_healthy
+      products-service:
+        condition: service_healthy
+      scraper-service:
+        condition: service_healthy
+      transformer-service:
+        condition: service_healthy
+      orchestrator-service:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost/health || exit 1"]
       interval: 30s
@@ -182,18 +190,14 @@ services:
     networks:
       - test
 
-  cron-service:
-    build: ./cron-service
-    container_name: cron-service
-    depends_on:
-      scraper-service:
-        condition: service_healthy
-      transformer-service:
-        condition: service_healthy
-      orchestrator-service:
-        condition: service_healthy
-    networks:
-      - test
+  # cron-service:
+  #   build: ./cron-service
+  #   container_name: cron-service
+  #   depends_on:
+  #     frontend:
+  #       condition: service_healthy
+  #   networks:
+  #     - test
 
 
 volumes:

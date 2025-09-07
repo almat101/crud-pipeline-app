@@ -6,15 +6,31 @@ import re
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
-from dotenv import load_dotenv
 import os
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+#local dev
+from dotenv import load_dotenv
+load_dotenv()
 
 app = FastAPI()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost"],  # Same as your Express config
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["*"],
+)
+
 @app.get("/health")
 def health():
+    """
+    Health check endpoint.
+    Used by Docker Compose for service healthcheck.
+    """
     return {"status": "ok"}
 
 @app.get("/")
@@ -22,16 +38,14 @@ def hello():
     return {"message": "Hello from trasformer-service!"}
 
 
-#TODO remove it when I launch from docker-compose
-# load_dotenv()
-
 POSTGRES_USER_PRODUCTS = os.getenv("POSTGRES_USER_PRODUCTS")
 POSTGRES_PASSWORD_PRODUCTS = os.getenv("POSTGRES_PASSWORD_PRODUCTS")
 POSTGRES_HOST_PRODUCTS = os.getenv("POSTGRES_HOST_PRODUCTS")
 POSTGRES_PORT_PRODUCTS = os.getenv("POSTGRES_PORT_PRODUCTS")
 POSTGRES_DB_PRODUCTS = os.getenv("POSTGRES_DB_PRODUCTS")
 
-PRODUCT_NAME_FILTERED = "thinkpad t14"
+# Introduzione query string per rendere la ricerca dinamica
+# PRODUCT_NAME_FILTERED = "thinkpad t14"
 # PRODUCT_NAME_FILTERED = "iphone 15"
 
 PRDODUCT_MIN_PRICE = 200.00
@@ -80,7 +94,7 @@ def get_products_from_mongo():
             client.close()
     return product_list
 
-def clean_data(df):
+def clean_data(df, q):
     """
     Cleans and transforms the raw product DataFrame.
 
@@ -110,7 +124,7 @@ def clean_data(df):
         df['title'] = df['title'].str.lower()
         # filtraggio del df usando una maschera che prende solo i prodotti che hanno iphone 15 nel title
         # aggiunta del .copy per evitare warning su pandas in modo da usare una copia del df e non una vista (una vista e come lavorare su una reference, questo dava il warning 'SettingWithCopyWarning')
-        df = df[df['title'].str.contains(PRODUCT_NAME_FILTERED)].copy()
+        df = df[df['title'].str.contains(q)].copy()
         #filtraggio emoji
         EMOJI_PATTERN = re.compile(
         "["
@@ -197,7 +211,23 @@ def writing_dataframe_to_pg(df):
     # print(df)
 
 @app.post("/transform")
-def exec_trasform():
+def exec_trasform(q: str):
+    """
+    Esegue la trasformazione e il salvataggio dei dati prodotti.
+
+    Parametri:
+        q (str): Query string obbligatoria che rappresenta il filtro di ricerca (nome del prodotto).
+                 Viene passata come parametro della query string nell'endpoint, ad esempio: /transform?q=iphone%2015
+
+    Funzionamento:
+        - Recupera i dati grezzi da MongoDB.
+        - Applica la pulizia e la trasformazione dei dati filtrando solo quelli che contengono la stringa 'q' nel titolo.
+        - Scrive i dati puliti su PostgreSQL.
+        - Restituisce un riepilogo dell'operazione e i dati trasformati.
+
+    Returns:
+        dict: Stato dell'operazione, messaggio e dati trasformati.
+    """
     try:
         # Entry point of the transformer-service script
         logger.info("Starting trasformer-service...")
@@ -207,7 +237,7 @@ def exec_trasform():
         df = pd.DataFrame(list)
         if df is not None and not df.empty:
             # 2. Clean and transform data using Pandas e NumPy.
-            df = clean_data(df)
+            df = clean_data(df, q)
             # 3. Test connection to PostgreSQL
             check_connection_to_pg()
             # 4. write cleaned data to PostgresSQL

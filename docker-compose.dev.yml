@@ -15,11 +15,25 @@ services:
     - ./frontend:/app # uso il volume app per avere l hot reload
     - /app/node_modules # Evita di sovrascrivere i moduli node
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     depends_on:
       auth-service:
-        condition: service_started
-    healthcheck:
-      disable: true
+        condition: service_healthy
+      products-service:
+        condition: service_healthy
+      scraper-service:
+        condition: service_healthy
+      transformer-service:
+        condition: service_healthy
+      orchestrator-service:
+        condition: service_healthy
+    # healthcheck:
+    #   disable: true
     networks:
       - test
 
@@ -56,6 +70,79 @@ services:
     depends_on:
       db_auth:
         condition: service_healthy
+    networks:
+      - test
+
+  scraper-service:
+    build: ./backend/scraper-service
+    container_name: scraper-service
+    env_file: ".env"
+    #command with --reload flag
+    command: uvicorn main:app --host 0.0.0.0 --port 3040 --reload
+    ports:
+      - 3040:3040
+    #volume mounted for hot reload
+    volumes:
+      - ./backend/scraper-service:/app
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3040/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - test
+
+  transformer-service:
+    build: ./backend/transformer-service
+    container_name: transformer-service
+    env_file: ".env"
+    command: uvicorn main:app --host 0.0.0.0 --port 3050 --reload
+    ports:
+      - 3050:3050
+    volumes:
+      - ./backend/transformer-service:/app
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      db_products:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - test
+
+
+  orchestrator-service:
+    build: ./backend/orchestrator-service
+    container_name: orchestrator-service
+    env_file: ".env"
+    command: uvicorn main:app --host 0.0.0.0 --port 3060 --reload
+    ports:
+      - 3060:3060
+    volumes:
+      - ./backend/orchestrator-service:/app
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      db_products:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3060/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
     networks:
       - test
 
@@ -106,6 +193,15 @@ services:
       - ./backend/products-service/init-scripts:/docker-entrypoint-initdb.d
     networks:
       - test
+
+  # cron-service:
+  #   build: ./cron-service
+  #   container_name: cron-service
+  #   depends_on:
+  #     frontend:
+  #       condition: service_healthy
+  #   networks:
+  #     - test
 
 volumes:
   postgres_auth_data:

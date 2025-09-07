@@ -3,14 +3,17 @@ from fastapi import FastAPI
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.common.action_chains import ActionChains
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
 from pymongo import MongoClient
 import re
 from datetime import datetime
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
+
+
+#for local dev
+from dotenv import load_dotenv
+load_dotenv()
 
 # MongoDB connection
 # MONGO_URI = "mongodb://localhost:27017/" # local development
@@ -18,7 +21,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB")
 MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
-SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/informatica/?q=thinkpad+t14&shp=true"
+# SCRAPE_URL d'ora in poi sara dinamico grazie all'introduczione di un bottone sul frontend react
+# SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/informatica/?q=thinkpad+t14"
 # SCRAPE_URL="https://www.subito.it/annunci-italia/vendita/elettronica/?q=iphone+15"
 
 SELECTOR_PRODUCTS = "a.SmallCard-module_link__hOkzY"
@@ -30,35 +34,51 @@ SELECTOR_PRICE = "div.index-module_price-group__B9-pV p.index-module_price__N7M2
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost"],  # Same as your Express config
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["*"],
+)
 # Configure logging to display messages at the INFO level
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)  # Create a logger instance for this module
 
 @app.get("/health")
 def health():
+    """
+    Health check endpoint.
+    Used by Docker Compose for service healthcheck.
+    """
     return {"status": "ok"}
 
 @app.get("/")
 def read_root():
-    logger.info("Root endpoint called")
     return {"message": "Hello from scraper-service!"}
 
-
-@app.get("/scrape")
-def scrape():
+@app.get("/scrape/{category}/")
+def scrape(category: str, q : str):
     """
-    Scrapes product data from the target website using Selenium, processes and cleans the extracted data,
-    and saves the results into MongoDB. Handles filtering, normalization, and error logging.
+    Scrapes product data from the target website using Selenium, salva i dati grezzi su MongoDB e restituisce il risultato.
+
+    Path Parameters:
+        category (str): La categoria di prodotto da cercare (passata come parametro nel path).
+
+    Query Parameters:
+        q (str): La query string obbligatoria che rappresenta il nome del prodotto da cercare.
 
     Returns:
-        dict: A response message and the list of cleaned products if successful,
-              or an error message if scraping or saving fails.
+        dict: Messaggio di risposta e lista dei prodotti estratti e salvati su MongoDB se la procedura ha successo,
+              oppure un messaggio di errore se il processo di scraping o salvataggio fallisce.
     """
+
+    #logger.info(f"path parameter is {category} and query param is {q}")
     driver = None
     try:
         logger.info("selenium driver start..")
         # Initialize the Selenium WebDriver
-        driver = setup()
+        driver = setup(category, q)
 
         # Get the title of the current webpage
         title = driver.title
@@ -71,9 +91,10 @@ def scrape():
         # find all elements matching the css selector (changed to take the DIV father element)
         products = driver.find_elements(By.CSS_SELECTOR, SELECTOR_PRODUCTS)
 
-        if not products:
-            logger.warning("No products found on the page. Check the CSS selector or page structure.")
-            return {"message": "No products found", "result": []}
+        # removed because the scrper return error only if something fails, if there is no product he have to return success scraper 0 product with empty raw_data
+        # if not products:
+        #     logger.warning("No products found on the page. Check the CSS selector or page structure.")
+        #     return {"status":"error", "message": "No products found", "result": []}
 
         raw_data = []
         for product in products:
@@ -90,7 +111,7 @@ def scrape():
                     "city": city,
                     "province": province,
                     "price": price,
-                    "date_scraped": None,
+                    "date_scraped": datetime.now(),
                     "url": url
                 }
                 raw_data.append(product_data)
@@ -107,7 +128,8 @@ def scrape():
         logger.info(f"Scraping completed succesfully: {raw_data}")
 
         
-        return saving_data(raw_data)
+        return saving_data_to_mongo(raw_data)
+        # return {"status":"success","message":"scraped completed!","raw_data":raw_data}
 
     except Exception as e:
         logger.error(f"Error during scrape: {e}")
@@ -117,7 +139,7 @@ def scrape():
         if(driver):
             teardown(driver)
 
-def setup():
+def setup(category, q):
     """
     Initializes the Selenium WebDriver (Chrome) and navigates to the target URL.
 
@@ -127,12 +149,16 @@ def setup():
     Raises:
         Exception: If there is an error during WebDriver setup.
     """
+    #logger.info(f"path parameter is {category} and query param is {q}")
     try:
 
         options = get_custom_chrome_options()
         # Inizializing the webdriver with custom options
         driver = webdriver.Chrome(options=options)
-        driver.get(SCRAPE_URL)
+
+        # logger.info(f"https://www.subito.it/annunci-italia/vendita/{category}/?q={q}")
+
+        driver.get(f"https://www.subito.it/annunci-italia/vendita/{category}/?q={q}")
         return driver  # Return the WebDriver instance
     except Exception as e:
         logger.error(f"Error on setup webdriver: {e}")
@@ -155,7 +181,7 @@ def teardown(driver):
     except Exception as e:
         logger.error(f"Error during WebDriver teardown: {e}")
 
-def saving_data(raw_data):
+def saving_data_to_mongo(raw_data):
     """
     Adds the current datetime to each product in the raw data and saves them to MongoDB.
     Data is stored as scraped, with only the date_scraped field added.
@@ -173,18 +199,21 @@ def saving_data(raw_data):
     #### MONGO DB connection creation ####
     client = None
     try:
+        if not all([MONGO_URI, MONGO_DB, MONGO_COLLECTION]):
+            raise ValueError("MONGO_URI, MONGO_DB e MONGO_COLLECTION must be set to .env file!")
         client = MongoClient(MONGO_URI)
         db = client[MONGO_DB]
         collection = db[MONGO_COLLECTION]
-        logger.info(f"date is {datetime.now()}")
+
+        # logger.info(f"date is {datetime.now()}")
         data = []
         ### delete all elements in the collections
-        # collection.delete_many({})
+        #collection.delete_many({})
         for product in raw_data:
             filter_query = {"title": product["title"]}  # This finds a document with the same title
             update_statement = {"$set": product}       # This sets all fields to the new data
             ###date
-            product['date_scraped'] = datetime.now()
+            # product['date_scraped'] = datetime.now()
 
             collection.update_one(filter_query, update_statement, upsert=True)
             data.append(product)
