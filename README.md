@@ -48,7 +48,7 @@ The project is built with a modular architecture, with each component serving a 
 - **Transform & Load (2):** Another microservice handles both the transformation of data (using Pandas for cleaning and standardization) and the loading of processed data into PostgreSQL for application use.
 
 **Automation:**
-- Cron job configured to run the pipeline hourly
+- ~~Cron job configured to run the pipeline hourly~~
 - Pipeline orchestration through a dedicated microservice
 
 **Data Processing:**
@@ -134,13 +134,23 @@ docker-compose up -d
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
-### Accessing the Application
-- **Frontend:** [http://localhost:80](http://localhost:80)
-- **Products API:** [http://localhost:3020/api/products](http://localhost:3020/api/products)
-- **Auth API:** [http://localhost:3030/api/auth](http://localhost:3030/api/auth)
-- **Scraper API:** [http://localhost:3040/scrape](http://localhost:3040/scrape) (scrape the products and save to mongoDB)
-- **Transformer API:** [http://localhost:3050/transform](http://localhost:3050/transform) (clean the products and save to postgreSQL)
-- **Orchestrator API:** [http://localhost:3060/orchestrate](http://localhost:3060/orchestrate) (triggers the pipeline)
+### FastAPI Interactive API Documentation
+
+The FastAPI-based microservices (scraper, transformer, orchestrator) automatically generate interactive API documentation using the OpenAPI standard.  
+You can access these docs in your browser at:
+
+- **Scraper API Docs:** [http://localhost:3040/docs](http://localhost:3040/docs)
+- **Transformer API Docs:** [http://localhost:3050/docs](http://localhost:3050/docs)
+- **Orchestrator API Docs:** [http://localhost:3060/docs](http://localhost:3060/docs)
+
+#### What can you do with FastAPI docs?
+- **Explore all available endpoints** for each service.
+- **See required parameters, request/response formats, and example payloads.**
+- **Test your API directly from the browser:**  
+  You can send GET, POST, and other requests, fill in parameters, and view responses in real time—no need for external tools like Postman for basic testing.
+
+> **Note:**  
+> The Node.js-based Auth and Products services do not provide automatic OpenAPI docs by default.
 
 ## Further Documentation
 

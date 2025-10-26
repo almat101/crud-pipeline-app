@@ -9,6 +9,7 @@ import ProductPage from './components/ProductPage'
 import ScrapedPage from './components/ScrapedPage'
 import { AuthProvider } from './context/AuthContext'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import NotFound from './components/NotFound';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/login" element={<LoginForm />} />
           <Route path='/products' element={<ProductPage />} />
           <Route path='/scraped' element={<ScrapedPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </div>

@@ -55,7 +55,7 @@ const SignupForm = () => {
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
             <Form className="p-4 border rounded shadow" onSubmit={handleSubmit}>
               
-              <Form.Group className="mb-3" controlId="formBasicEmail">
+              <Form.Group className="mb-3" controlId="formBasicUsername">
                 <Form.Label>Username</Form.Label>
                 <Form.Control 
                   type="text"
@@ -86,7 +86,7 @@ const SignupForm = () => {
                   placeholder="Password" />
               </Form.Group>
 
-              <Form.Group className="mb-3" controlId="formBasicPassword">
+              <Form.Group className="mb-3" controlId="formBasicRepeatPassword">
                 <Form.Label>Repeat password</Form.Label>
                 <Form.Control 
                   type="password"

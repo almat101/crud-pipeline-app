@@ -54,7 +54,7 @@ services:
       - 3020:3020
     restart: unless-stopped
     depends_on:
-      db_auth:
+      db_products:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3020/health"]

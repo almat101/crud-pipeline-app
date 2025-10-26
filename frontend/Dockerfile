@@ -16,7 +16,7 @@ RUN npm run build
 
 FROM nginx:1.29.0-alpine-slim 
 
-RUN apk update && apk add --no-cache curl vim sudo net-tools
+RUN apk update && apk add --no-cache curl vim sudo iproute2
 
 COPY --from=build /app/build /usr/share/nginx/html
 
